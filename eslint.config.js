@@ -1,9 +1,13 @@
-import js from "@eslint/js";
-import globals from "globals";
-import pluginVue from "eslint-plugin-vue";
-import { defineConfig } from "eslint/config";
+import { createConfigForNuxt } from '@nuxt/eslint-config'
 
-export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,vue}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
-  pluginVue.configs["flat/essential"],
-]);
+export default createConfigForNuxt({
+}).override('nuxt/javascript', {
+  rules: {
+    'no-unused-vars': 'warn',
+  }
+}).override('nuxt/vue/rules', {
+  rules: {
+    'vue/first-attribute-linebreak': 'off',
+    'vue/multi-word-component-names': 'off',
+  }
+})
