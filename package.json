@@ -17,6 +17,7 @@
     "@pinia/nuxt": "^0.11.2",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
+    "formidable": "^3.5.4",
     "nuxt": "^4.1.1",
     "pinia": "^3.0.3",
     "tabulator-tables": "^6.3.1",

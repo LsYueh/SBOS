@@ -150,4 +150,6 @@ dist
 .DS_Store
 .fleet
 .idea
+.temp
+test-data
 package-lock.json

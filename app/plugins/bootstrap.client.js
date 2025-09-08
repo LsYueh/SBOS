@@ -1,1 +1,11 @@
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+/* global defineNuxtPlugin */
+
+import * as bootstrap from 'bootstrap'
+
+export default defineNuxtPlugin(() => {
+    return {
+      provide: {
+        bootstrap
+      }
+    }
+})
