@@ -3,7 +3,16 @@
     <h1 class="text-xl font-bold mb-4">交易所成交回報上傳</h1>
 
     <form class="space-y-4" @submit.prevent="handleUpload">
-      <div class="mb-3">
+      <div class="row mb-3">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text" for="transactionDate">交易日期</span>
+            <input id="transactionDate" v-model="transactionDate" type="date" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
         <label for="formFile" class="form-label">檔案代號: R3</label>
         <div class="input-group">
           <input id="formFile" ref="fileInput" class="form-control" type="file" @change="onFileChange">
@@ -15,13 +24,8 @@
     </form>
 
     <!-- Bootstrap Modal -->
-    <div
-      id="messageModal"
-      ref="modalRef"
-      class="modal fade"
-      tabindex="-1"
-      aria-labelledby="messageModalLabel"
-      aria-hidden="true"
+    <div id="messageModal" ref="modalRef" class="modal fade" tabindex="-1"
+      aria-labelledby="messageModalLabel" aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -47,6 +51,8 @@
 import { ref } from 'vue'
 
 const { $bootstrap } = useNuxtApp();
+
+const transactionDate = ref(new Date().toISOString().split('T')[0])
 
 const file = ref(null)
 const fileInput = ref(null)
@@ -83,15 +89,16 @@ async function handleUpload() {
   isUploading.value = true
 
   const formData = new FormData()
+  formData.append('transactionDate', transactionDate.value)
   formData.append('file', file.value)
 
   try {
-    const res = await fetch('/api/MHOK/upload', {
+    const _r = await fetch('/api/MHOK/upload', {
       method: 'POST',
       body: formData
     })
-    const data = await res.json()
-    showModal(data.message || '上傳完成')
+    const res = await _r.json()
+    showModal(res.success ? `已上傳${res.affectedRows ?? -1}筆資料: ${res.message}` : '上傳失敗')
 
     // 上傳成功後清空欄位
     file.value = null
