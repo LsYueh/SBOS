@@ -34,7 +34,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
           </div>
           <div class="modal-body">
-            {{ message }}
+            <pre>{{ message }}</pre>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -98,7 +98,7 @@ async function handleUpload() {
       body: formData
     })
     const res = await _r.json()
-    showModal(res.success ? `已上傳${res.affectedRows ?? -1}筆資料: ${res.message}` : '上傳失敗')
+    showModal(res.success ? `已上傳${res.affectedRows ?? -1}筆資料\n${res.message}` : '上傳失敗')
 
     // 上傳成功後清空欄位
     file.value = null

@@ -63,8 +63,64 @@ class Decoder extends Transform {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
+ * 檢查日期格式後建構
+ * @param {string} dateStr 
+ * @returns 
+ */
+function createDateFromString(dateStr) {
+  // 僅允許 YYYY-MM-DD
+  const re = /^(\d{4})-(\d{2})-(\d{2})$/;
+  const match = dateStr.match(re);
+  if (!match) {
+    throw new Error("日期格式錯誤，請使用 YYYY-MM-DD");
+  }
+
+  const year  = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1; // JS 月份 0 基底
+  const day   = parseInt(match[3], 10);
+
+  const date = new Date(year, month, day);
+
+  // 檢查日期是否合法（例如 2025-02-30 應該無效）
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ) {
+    throw new Error("日期不存在");
+  }
+
+  return date;
+}
+
+/**
+ * @param {Date} date 
+ * @returns 
+ */
+function toLocalISODate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * @param {Date} targetDate 
+ * @param {Date} sourceDate 
+ * @returns 
+ */
+function overwriteYMD(targetDate, sourceDate) {
+  targetDate.setFullYear(
+    sourceDate.getFullYear(),
+    sourceDate.getMonth(),
+    sourceDate.getDate()
+  );
+  return targetDate;
+}
+
+/**
  * @param {object} input 
- * @param {string} input.transactionDate 
+ * @param {Date} input.transactionDate 
  * @param {string} input.filePath 
  * @param {(value: any) => void} resolve 
  * @param {(value: any) => void} reject 
@@ -83,7 +139,10 @@ function processFile(input, resolve, reject) {
   decoder.on('data', (buffer) => {
     if (buffer.length === 66) {
       const R3 = copybook.parse(buffer, { fileCode: 'R3' });
-      console.log(`[${R3.OrderNo}] ${R3.StkNo.padEnd(6, ' ')} ${R3.BuySell} : ${R3.MthQty} x  ${R3.MthPr} `);
+      // console.log(`[${R3.OrderNo}] ${R3.StkNo.padEnd(6, ' ')} ${R3.BuySell} : ${R3.MthQty} x  ${R3.MthPr} `);
+
+      // 用transactionDate覆蓋R3.MthTime
+      R3.MthTime = overwriteYMD(R3.MthTime, transactionDate)
 
       // TODO: 寫入MHOK暫存
 
@@ -101,7 +160,7 @@ function processFile(input, resolve, reject) {
 
     resolve({
       success: true,
-      message: `檔案日期: ${transactionDate} 處理完畢`,
+      message: `檔案日期: ${toLocalISODate(transactionDate)} 處理完畢`,
       affectedRows: recCnt,
     })
   })
@@ -136,10 +195,10 @@ export default defineEventHandler(async (event) => {
       if (err) reject(err)
 
       const _t = fields.transactionDate;
-      const transactionDate = ((Array.isArray(_t) ? _t[0] : _t)) ?? new Date().toISOString().split('T')[0]
+      const transactionDate = createDateFromString((Array.isArray(_t) ? _t[0] : _t))
 
       const _f = files.file
-      if (!_f) return resolve({ success: false, message: `沒有收到'${transactionDate}'的檔案` })
+      if (!_f) return resolve({ success: false, message: `沒有收到'${toLocalISODate(transactionDate)}'的檔案` })
       const filePath = Array.isArray(_f) ? _f[0].filepath : _f.filepath
 
       processFile({transactionDate, filePath}, resolve, reject)
