@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --inspect",
     "dev:debug": "node --inspect-brk node_modules/.bin/nuxi dev",
     "lint": "eslint ./app --ext .js,.ts,.vue",
     "generate": "nuxt generate",

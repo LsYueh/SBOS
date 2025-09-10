@@ -29,11 +29,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  vite: {
-    build: {
-      sourcemap: true
-    }
-  },
+  sourcemap: true,
 
   css: [
     'bootstrap/dist/css/bootstrap.min.css',

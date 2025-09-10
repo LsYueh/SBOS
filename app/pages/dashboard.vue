@@ -1,6 +1,4 @@
 <script setup>
-const user = useUserStore()
-user.loadFromCookie()
 </script>
 
 <template>

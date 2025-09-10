@@ -1,3 +1,29 @@
+<template>
+  <header class="bg-primary text-white py-2 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-building me-1"/> 證券帳務
+      </h5>
+
+      <div class="position-absolute start-50 translate-middle-x">
+        {{ clock }}
+      </div>
+
+      <!-- 登出 -->
+      <div v-if="user.isLoggedIn" class="d-flex align-items-center">
+        <span>
+          <i class="fas fa-user me-1"/>
+        </span>
+        <span class="me-2">{{ user.username }}</span>
+        <span title="登出" style="cursor: pointer;" @click="handleLogout">
+          <i class="fas fa-sign-out-alt me-1"/>
+        </span>
+      </div>
+
+    </div>
+  </header>
+</template>
+
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -28,32 +54,6 @@ onUnmounted(() => {
 })
 
 </script>
-
-<template>
-  <header class="bg-primary text-white py-2 mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">
-        <i class="fas fa-building me-1"/> 證券帳務
-      </h5>
-
-      <div class="position-absolute start-50 translate-middle-x">
-        {{ clock }}
-      </div>
-
-      <!-- 登出 -->
-      <div v-if="user.isLoggedIn" class="d-flex align-items-center">
-        <span>
-          <i class="fas fa-user me-1"/>
-        </span>
-        <span class="me-2">{{ user.username }}</span>
-        <span title="登出" style="cursor: pointer;" @click="handleLogout">
-          <i class="fas fa-sign-out-alt me-1"/>
-        </span>
-      </div>
-
-    </div>
-  </header>
-</template>
 
 <style scoped>
 header {

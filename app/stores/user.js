@@ -55,7 +55,9 @@ export const useUserStore = defineStore('user', {
       if (tokenCookie.value) {
         this.token = tokenCookie.value
         this.isLoggedIn = true
-        // 你可以額外把 username 從 cookie 或 API 取回
+        
+        // TODO: 把 username 從 cookie 或 API 取回
+        this.username = '000000'
       }
     }
   }
