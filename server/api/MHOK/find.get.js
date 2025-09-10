@@ -14,11 +14,10 @@ import db from '../../utils/db.js'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const {
-    page = 1, limit = 10,
-    sortBy = 'OrderNo',
-    order = 'asc' // asc 或 desc
-  } = query
+  const page = Number(query.page) || 1
+  const size = Number(query.size) || 5
+  const sortField = query.sortField || ''
+  const sortDir = query.sortDir || ''
 
   db.read()
   let MHOK = db.data.MHOK;
@@ -36,23 +35,21 @@ export default defineEventHandler(async (event) => {
 
   // 排序
   MHOK = MHOK.sort((a, b) => {
-    const valA = a[sortBy]
-    const valB = b[sortBy]
-    if (valA < valB) return order === 'asc' ? -1 : 1
-    if (valA > valB) return order === 'asc' ? 1 : -1
+    const valA = a[sortField]
+    const valB = b[sortField]
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1
     return 0
   })
 
   // 分頁
-  const pageNum = parseInt(page)
-  const limitNum = parseInt(limit)
-  const start = (pageNum - 1) * limitNum
-  const pagedMHOK = MHOK.slice(start, start + limitNum)
+  const start = (page - 1) * size
+  const end = start + size
+  const paginated = MHOK.slice(start, end)
+  const lastPage = Math.ceil(MHOK.length / size)
 
   return {
-    total: MHOK.length,
-    page: pageNum,
-    limit: limitNum,
-    data: pagedMHOK
+    data: paginated,
+    last_page: lastPage
   }
 })

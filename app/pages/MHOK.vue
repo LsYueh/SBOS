@@ -23,6 +23,8 @@
       </div>
     </form>
 
+    <TabulatorTable :ajax-url="apiUrl" :columns="columns" />
+
     <!-- Bootstrap Modal -->
     <div id="messageModal" ref="modalRef" class="modal fade" tabindex="-1"
       aria-labelledby="messageModalLabel" aria-hidden="true"
@@ -48,7 +50,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import TabulatorTable from '~/components/TabulatorTable.vue'
 const { $bootstrap } = useNuxtApp();
 
 
@@ -64,6 +67,24 @@ const file = ref(null)
 const fileInput = ref(null)
 const isUploading = ref(false)
 
+/** Tabulator */
+const apiUrl = '/api/MHOK/find'
+
+const columns = [
+  { title: '委託書編號', field: 'OrderNo' },
+  { title: '證券代號', field: 'StkNo' },
+  { title: '成交數量', field: 'MthQty' },
+  { title: '成交價格', field: 'MthPr' },
+  { title: '成交時間', field: 'MthTime' },
+  { title: '交易類別', field: 'ExCd' },
+  { title: '買賣別', field: 'BuySell' },
+  { title: '交易類別', field: 'ExCd' },
+  { title: '證券商代號', field: 'BrokerId' },
+  { title: '帳號', field: 'IVAcNo' },
+  { title: '委託類別', field: 'OdrTpe' },
+  { title: '#', field: 'SeqNo' },
+]
+
 /** @type {import('bootstrap').Modal | null} Modal */
 let modalInstance = null
 const modalRef = ref(null)
@@ -74,7 +95,7 @@ const message = ref('')
  * Events
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-onMounted(() => {
+onMounted(async () => {
   if (modalRef.value) {
     modalInstance = new $bootstrap.Modal(modalRef.value, { backdrop: 'static' })
   }
