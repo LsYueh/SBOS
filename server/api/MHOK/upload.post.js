@@ -1,8 +1,9 @@
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, createError } from 'h3'
 import fs from 'fs'
 import { Transform } from 'stream'
 
 import formidable from 'formidable'
+import PQueue from 'p-queue';
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -10,6 +11,21 @@ import formidable from 'formidable'
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 import { copybook } from 'templar'
+
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * LowDB
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+import db from '../../utils/db.js'
+
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** PQueue */
+const queue = new PQueue({concurrency: 1})
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -125,39 +141,15 @@ function overwriteYMD(targetDate, sourceDate) {
  * @param {(value: any) => void} resolve 
  * @param {(value: any) => void} reject 
  */
-function processFile(input, resolve, reject) {
+async function processFile(input, resolve, reject) {
   const filePath = input.filePath;
   const transactionDate = input.transactionDate;
 
   const readStream = fs.createReadStream(filePath);
-  const decoder = new Decoder()
 
   let recCnt = 0;
 
-  readStream.pipe(decoder)
-
-  decoder.on('data', (buffer) => {
-    if (buffer.length === 66) {
-      const R3 = copybook.parse(buffer, { fileCode: 'R3' });
-      // console.log(`[${R3.OrderNo}] ${R3.StkNo.padEnd(6, ' ')} ${R3.BuySell} : ${R3.MthQty} x  ${R3.MthPr} `);
-
-      // 用transactionDate覆蓋R3.MthTime
-      R3.MthTime = overwriteYMD(R3.MthTime, transactionDate)
-
-      // TODO: 寫入MHOK暫存
-
-      // TODO: 寫入MHIO並分單
-
-      recCnt++;
-    }
-  })
-
-  decoder.on('end', () => {
-    // 刪除檔案
-    fs.unlink(filePath, (unlinkErr) => {
-      if (unlinkErr) console.error('刪除檔案失敗:', unlinkErr)
-    })
-
+  queue.on('idle', () => {
     resolve({
       success: true,
       message: `檔案日期: ${toLocalISODate(transactionDate)} 處理完畢`,
@@ -165,11 +157,66 @@ function processFile(input, resolve, reject) {
     })
   })
 
-  decoder.on('error', (err) => {
-    reject(err)
+  queue.on('error', (error) => {
+    reject(error)
+  })
+
+  readStream
+  .pipe(new Decoder())
+  .on('data', async (buffer) => {
+    if (buffer.length === 66) {
+      const R3 = copybook.parse(buffer, { fileCode: 'R3' });
+
+      // 用transactionDate覆蓋R3.MthTime
+      R3.MthTime = overwriteYMD(R3.MthTime, transactionDate)
+
+      // PQueue
+      await queue.add(() => {
+        const affectedRows = WriteMHOK(R3); recCnt+=affectedRows;
+        if (affectedRows === 1) WriteMHIO(R3)
+      });
+    }
+  })
+  .on('end', () => {
+    // 刪除檔案
+    fs.unlink(filePath, (unlinkErr) => {
+      if (unlinkErr) console.error('刪除檔案失敗:', unlinkErr)
+    })
+  })
+  .on('error', (error) => {
+    reject(error)
   })
 }
 
+/**
+ * @param {*} R3 
+ * @returns affected rows
+ */
+function WriteMHOK(R3) {
+    db.read()
+
+    // 資料重複性檢查
+    const exists = db.data.MHOK.some((MHOK) => 
+      (MHOK.MthTime === R3.MthTime.toISOString()) && (MHOK.RecNo === R3.RecNo)
+    )
+    if (exists) return 0;
+
+    // 寫入MHOK
+    db.data.MHOK.push(R3)
+    db.write()
+
+    return 1;
+}
+
+/**
+ * @param {*} R3 
+ * @returns affected rows
+ */
+function WriteMHIO(R3) {
+  // TODO: 分單處理
+  
+  return 0;
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -191,7 +238,7 @@ export default defineEventHandler(async (event) => {
   }
 
   return await new Promise((resolve, reject) => {
-    form.parse(event.node.req, (err, fields, files) => {
+    form.parse(event.node.req, async (err, fields, files) => {
       if (err) reject(err)
 
       const _t = fields.transactionDate;
@@ -201,7 +248,7 @@ export default defineEventHandler(async (event) => {
       if (!_f) return resolve({ success: false, message: `沒有收到'${toLocalISODate(transactionDate)}'的檔案` })
       const filePath = Array.isArray(_f) ? _f[0].filepath : _f.filepath
 
-      processFile({transactionDate, filePath}, resolve, reject)
+      await processFile({transactionDate, filePath}, resolve, reject)
     })
   })
 })

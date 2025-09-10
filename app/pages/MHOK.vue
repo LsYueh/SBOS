@@ -49,20 +49,30 @@
 
 <script setup>
 import { ref } from 'vue'
-
 const { $bootstrap } = useNuxtApp();
 
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** 交易日期 */
 const transactionDate = ref(new Date().toISOString().split('T')[0])
 
+/** 檔案 */
 const file = ref(null)
 const fileInput = ref(null)
 const isUploading = ref(false)
+
+/** @type {import('bootstrap').Modal | null} Modal */
+let modalInstance = null
+const modalRef = ref(null)
 const message = ref('')
 
-const modalRef = ref(null)
 
-/** @type {import('bootstrap').Modal | null} */
-let modalInstance = null
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events
+---------+---------+---------+---------+---------+---------+---------+--------*/
 
 onMounted(() => {
   if (modalRef.value) {

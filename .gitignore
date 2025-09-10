@@ -152,4 +152,5 @@ dist
 .idea
 .temp
 test-data
+db.json
 package-lock.json
