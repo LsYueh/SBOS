@@ -4,10 +4,10 @@
 
     <form class="space-y-4" @submit.prevent="handleUpload">
       <div class="row mb-3">
-        <div class="col-md-5">
+        <div class="col-md-3">
           <div class="input-group">
             <span class="input-group-text" for="transactionDate">交易日期</span>
-            <input id="transactionDate" v-model="transactionDate" type="date" class="form-control">
+            <input id="transactionDate" v-model="transactionDate" type="date" class="form-control" readonly="true">
           </div>
         </div>
       </div>
