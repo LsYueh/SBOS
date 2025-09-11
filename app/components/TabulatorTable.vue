@@ -22,8 +22,8 @@ onMounted(() => {
       // Tabulator 內建 params 包含 page, size, sorters
       const page = params.page || 1
       const size = params.size || 10
-      const sortField = params.sorters?.[0]?.field || 'OrderNo'
-      const sortDir = params.sorters?.[0]?.dir || 'asc'
+      const sortField = params.sorters?.[0]?.field || ''
+      const sortDir = params.sorters?.[0]?.dir || ''
 
       // 拼接 Query
       const query = new URLSearchParams({
@@ -57,6 +57,12 @@ onBeforeUnmount(() => {
   if (tabulatorInstance) {
     tabulatorInstance.destroy()
     tabulatorInstance = null
+  }
+})
+
+defineExpose({
+  refresh() {
+    if (tabulatorInstance) tabulatorInstance.setData()
   }
 })
 </script>

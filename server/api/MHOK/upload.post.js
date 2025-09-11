@@ -5,6 +5,10 @@ import { Transform } from 'stream'
 import formidable from 'formidable'
 import PQueue from 'p-queue';
 
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Copybook
@@ -14,7 +18,7 @@ import { copybook } from 'templar'
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * LowDB
+ * Utils - LowDB
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 import db from '../../utils/db.js'
@@ -26,6 +30,11 @@ import db from '../../utils/db.js'
 
 /** PQueue */
 const queue = new PQueue({concurrency: 1})
+
+/** Timezone */
+dayjs.extend(utc)
+dayjs.extend(timezone)
+dayjs.tz.setDefault('Asia/Taipei')
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -79,9 +88,10 @@ class Decoder extends Transform {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * 檢查日期格式後建構
- * @param {string} dateStr 
- * @returns 
+ * 檢查日期格式後建構 dayjs 物件
+ * @param {string} dateStr - 日期字串，僅允許 YYYY-MM-DD
+ * @returns {dayjs.Dayjs} dayjs 物件
+ * @throws {Error} 日期格式錯誤或不存在
  */
 function createDateFromString(dateStr) {
   // 僅允許 YYYY-MM-DD
@@ -91,18 +101,9 @@ function createDateFromString(dateStr) {
     throw new Error("日期格式錯誤，請使用 YYYY-MM-DD");
   }
 
-  const year  = parseInt(match[1], 10);
-  const month = parseInt(match[2], 10) - 1; // JS 月份 0 基底
-  const day   = parseInt(match[3], 10);
+  const date = dayjs(dateStr, 'YYYY-MM-DD', true); // strict 模式
 
-  const date = new Date(year, month, day);
-
-  // 檢查日期是否合法（例如 2025-02-30 應該無效）
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month ||
-    date.getDate() !== day
-  ) {
+  if (!date.isValid()) {
     throw new Error("日期不存在");
   }
 
@@ -110,33 +111,22 @@ function createDateFromString(dateStr) {
 }
 
 /**
- * @param {Date} date 
- * @returns 
- */
-function toLocalISODate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-/**
  * @param {Date} targetDate 
- * @param {Date} sourceDate 
+ * @param {dayjs.Dayjs} sourceDate 
  * @returns 
  */
 function overwriteYMD(targetDate, sourceDate) {
   targetDate.setFullYear(
-    sourceDate.getFullYear(),
-    sourceDate.getMonth(),
-    sourceDate.getDate()
+    sourceDate.year(),
+    sourceDate.month(), // 0-base 與 Date 一致
+    sourceDate.date()   // 1-base
   );
   return targetDate;
 }
 
 /**
  * @param {object} input 
- * @param {Date} input.transactionDate 
+ * @param {dayjs.Dayjs} input.transactionDate 
  * @param {string} input.filePath 
  * @param {(value: any) => void} resolve 
  * @param {(value: any) => void} reject 
@@ -152,7 +142,7 @@ async function processFile(input, resolve, reject) {
   queue.on('idle', () => {
     resolve({
       success: true,
-      message: `檔案日期: ${toLocalISODate(transactionDate)} 處理完畢`,
+      message: `檔案日期: ${transactionDate.format('YYYY-MM-DD')} 處理完畢`,
       affectedRows: recCnt,
     })
   })
@@ -197,9 +187,14 @@ function WriteMHOK(R3) {
 
     // 資料重複性檢查
     const exists = db.data.MHOK.some((MHOK) => 
-      (MHOK.MthTime === R3.MthTime.toISOString()) && (MHOK.RecNo === R3.RecNo)
+      // Note: TeMPlar已補上年月日
+      (MHOK.MthTime === R3.MthTime.toISOString()) && 
+      // `分公司`加上`該TMP上的成交序號`應該是當日唯一
+      (MHOK.BrokerId === R3.BrokerId) && (MHOK.RecNo === R3.RecNo)
     )
     if (exists) return 0;
+
+    // Note: DB儲存UTC時間
 
     // 寫入MHOK
     db.data.MHOK.push(R3)
@@ -245,7 +240,7 @@ export default defineEventHandler(async (event) => {
       const transactionDate = createDateFromString((Array.isArray(_t) ? _t[0] : _t))
 
       const _f = files.file
-      if (!_f) return resolve({ success: false, message: `沒有收到'${toLocalISODate(transactionDate)}'的檔案` })
+      if (!_f) return resolve({ success: false, message: `沒有收到'${transactionDate.format('YYYY-MM-DD')}'的檔案` })
       const filePath = Array.isArray(_f) ? _f[0].filepath : _f.filepath
 
       await processFile({transactionDate, filePath}, resolve, reject)

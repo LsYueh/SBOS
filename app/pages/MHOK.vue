@@ -23,7 +23,7 @@
       </div>
     </form>
 
-    <TabulatorTable :ajax-url="apiUrl" :columns="columns" />
+    <TabulatorTable ref="viewMHOK" :ajax-url="apiUrl" :columns="columns" />
 
     <!-- Bootstrap Modal -->
     <div id="messageModal" ref="modalRef" class="modal fade" tabindex="-1"
@@ -52,7 +52,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import TabulatorTable from '~/components/TabulatorTable.vue'
-const { $bootstrap } = useNuxtApp();
+const { $bootstrap, $dayjs } = useNuxtApp();
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -60,7 +60,7 @@ const { $bootstrap } = useNuxtApp();
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** 交易日期 */
-const transactionDate = ref(new Date().toISOString().split('T')[0])
+const transactionDate = ref($dayjs().format('YYYY-MM-DD'))
 
 /** 檔案 */
 const file = ref(null)
@@ -71,19 +71,36 @@ const isUploading = ref(false)
 const apiUrl = '/api/MHOK/find'
 
 const columns = [
+  { title: '#', formatter: 'rownum', hozAlign: 'center', widthGrow: 0.2, headerSort:false, },
   { title: '委託書編號', field: 'OrderNo' },
   { title: '證券代號', field: 'StkNo' },
-  { title: '成交數量', field: 'MthQty' },
-  { title: '成交價格', field: 'MthPr' },
-  { title: '成交時間', field: 'MthTime' },
-  { title: '交易類別', field: 'ExCd' },
-  { title: '買賣別', field: 'BuySell' },
-  { title: '交易類別', field: 'ExCd' },
-  { title: '證券商代號', field: 'BrokerId' },
-  { title: '帳號', field: 'IVAcNo' },
-  { title: '委託類別', field: 'OdrTpe' },
-  { title: '#', field: 'SeqNo' },
+  { title: '數量', field: 'MthQty', widthGrow: 0.5, headerSort:false,  },
+  { title: '價格', field: 'MthPr', formatter:"money", },
+  { title: '時間', field: 'MthTime', formatter: (cell) => $dayjs(cell.getValue()).format('HH:mm:ss.SSS'), },
+  { title: '交易類別', field: 'ExCd', widthGrow: 0.7, headerSort:false, formatter: (cell) => cell.getValue() === '0' ? '整股' : '零股' , },
+  { title: 'B/S', field: 'BuySell', widthGrow: 0.5, headerSort:false,  },
+  { title: '帳號', field: '_Account_', headerSort:false, mutator:function(value, data){
+    return `${data.BrokerId}-${data.IVAcNo}`
+  }},
+  { title: '委託類別', field: 'OdrTpe', widthGrow: 0.7, headerSort:false, formatter: function(cell) {
+    const OdrTpe = cell.getValue();
+    switch (OdrTpe) {
+      case '0': return '一般'
+      case '1': return '融資(證)'
+      case '2': return '融券(證)'
+      case '3': return '融資(自)'
+      case '4': return '融券(自)'
+      case '5': return '券賣(5)'
+      case '6': return '券賣(6)'
+      default: return `${OdrTpe}`
+    }
+  }},
+  { title: '流水號', field: 'SeqNo' },
+  // { title: '成交總檔編號', field: 'RecNo' },
+  // { title: '補送註記', field: 'MarkS' },
 ]
+
+const viewMHOK = ref(null)
 
 /** @type {import('bootstrap').Modal | null} Modal */
 let modalInstance = null
@@ -136,6 +153,8 @@ async function handleUpload() {
     if (fileInput.value) {
       fileInput.value.value = ''
     }
+
+    viewMHOK.value.refresh()
   } catch (err) {
     showModal('上傳失敗: ' + err)
   } finally {

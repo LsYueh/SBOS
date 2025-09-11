@@ -16,8 +16,8 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const page = Number(query.page) || 1
   const size = Number(query.size) || 5
-  const sortField = query.sortField || ''
-  const sortDir = query.sortDir || ''
+  const sortField = query.sortField || 'OrderNo'
+  const sortDir = query.sortDir || 'asc'
 
   db.read()
   let MHOK = db.data.MHOK;

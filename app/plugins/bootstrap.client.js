@@ -1,4 +1,4 @@
-/* global defineNuxtPlugin */
+import { defineNuxtPlugin } from '#app'
 
 import * as bootstrap from 'bootstrap'
 
