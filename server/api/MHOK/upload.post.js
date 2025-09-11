@@ -1,6 +1,5 @@
 import { defineEventHandler, createError } from 'h3'
 import fs from 'fs'
-import { Transform } from 'stream'
 
 import formidable from 'formidable'
 import PQueue from 'p-queue';
@@ -9,19 +8,16 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 
-
-/**------+---------+---------+---------+---------+---------+---------+----------
- * Copybook
----------+---------+---------+---------+---------+---------+---------+--------*/
-
 import { copybook } from 'templar'
 
+import { Decoder } from '../../utils/decoder'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Utils - LowDB
+ * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import db from '../../utils/db.js'
+import { WriteMHOK } from '../../dal/MHOK'
+import { WriteMHIO } from '../../dal/MHIO'
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -35,52 +31,6 @@ const queue = new PQueue({concurrency: 1})
 dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.tz.setDefault('Asia/Taipei')
-
-
-/**------+---------+---------+---------+---------+---------+---------+----------
- * Class
----------+---------+---------+---------+---------+---------+---------+--------*/
-
-/**
- * @class 
- */
-class Decoder extends Transform {
-  constructor(options) {
-    super({ ...options, readableObjectMode: true });
-    this.leftover = '';
-  }
-
-  /**
-   * 
-   * @param {*} chunk 
-   * @param {BufferEncoding} encoding 
-   * @param {*} callback 
-   */
-  _transform(chunk, encoding, callback) {
-    const buffer = this.leftover ? Buffer.concat([this.leftover, chunk]) : chunk;
-    let start = 0;
-
-    for (let i = 0; i < buffer.length; i++) {
-      if (buffer[i] === 0x0a) { // \n
-        // 判斷前一個字元是不是 \r
-        const end = (i > 0 && buffer[i - 1] === 0x0d) ? i - 1 : i;
-        const line = buffer.slice(start, end);
-        this.push(line);
-        start = i + 1;
-      }
-    }
-
-    this.leftover = start < buffer.length ? buffer.slice(start) : null;
-    callback();
-  }
-
-  _flush(callback) {
-    if (this.leftover) {
-      this.push(this.leftover);
-    }
-    callback();
-  }
-}
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -178,40 +128,6 @@ async function processFile(input, resolve, reject) {
   })
 }
 
-/**
- * @param {*} R3 
- * @returns affected rows
- */
-function WriteMHOK(R3) {
-    db.read()
-
-    // 資料重複性檢查
-    const exists = db.data.MHOK.some((MHOK) => 
-      // Note: TeMPlar已補上年月日
-      (MHOK.MthTime === R3.MthTime.toISOString()) && 
-      // `分公司`加上`該TMP上的成交序號`應該是當日唯一
-      (MHOK.BrokerId === R3.BrokerId) && (MHOK.RecNo === R3.RecNo)
-    )
-    if (exists) return 0;
-
-    // Note: DB儲存UTC時間
-
-    // 寫入MHOK
-    db.data.MHOK.push(R3)
-    db.write()
-
-    return 1;
-}
-
-/**
- * @param {*} R3 
- * @returns affected rows
- */
-function WriteMHIO(R3) {
-  // TODO: 分單處理
-  
-  return 0;
-}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler

@@ -1,0 +1,111 @@
+import db from '../utils/db.js'
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Helper
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * MthTime::BrokerId::RecNo
+ * @param {*} MHOK 
+ * @param {*} R3 
+ * @returns 
+ */
+function PK01(MHOK, R3) {
+  const cond = (MHOK.MthTime  === R3.MthTime.toISOString()) // Note: TeMPlar已補上年月日
+            && (MHOK.BrokerId === R3.BrokerId)
+            && (MHOK.RecNo    === R3.RecNo) // `分公司`加上`該TMP上的成交序號`應該是當日唯一
+  ;
+  return cond
+}
+
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Exports
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * @param {import('ufo').QueryObject} query 
+ * @returns 
+ */
+export function ReadMHOK(query) {
+  const page = Number(query.page) || 1
+  const size = Number(query.size) || 5
+  const sortField = query.sortField || 'OrderNo'
+  const sortDir = query.sortDir || 'asc'
+
+  db.read()
+  let MHOK = db.data.MHOK;
+
+  // 按日期篩選
+  const transactionDate = new Date();
+  MHOK = MHOK.filter((rec) => {
+    const MthTime = new Date(rec.MthTime)
+    return (
+      MthTime.getFullYear() === transactionDate.getFullYear() &&
+      MthTime.getMonth()    === transactionDate.getMonth() &&
+      MthTime.getDate()     === transactionDate.getDate()
+    );
+  })
+
+  // 排序
+  MHOK = MHOK.sort((a, b) => {
+    const valA = a[sortField]
+    const valB = b[sortField]
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1
+    return 0
+  })
+
+  // 分頁
+  const start = (page - 1) * size
+  const end = start + size
+  const paginated = MHOK.slice(start, end)
+  const lastPage = Math.ceil(MHOK.length / size)
+
+  return {
+    data: paginated,
+    last_page: lastPage
+  }
+}
+
+/**
+ * @param {*} R3 
+ * @returns affected rows
+ */
+export function WriteMHOK(R3) {
+    db.read()
+
+    // 資料重複性檢查
+    const exists = db.data.MHOK.some((MHOK) => PK01(MHOK,R3))
+    if (exists) return 0;
+
+    // Note: DB儲存UTC時間
+
+    // 寫入MHOK
+    db.data.MHOK.push(R3)
+    db.write()
+
+    return 1;
+}
+
+/**
+ * @param {object} key 
+ * @param {string} key.MthTime 
+ * @param {string} key.BrokerId 
+ * @param {string} key.RecNo 
+ * @returns affected rows
+ */
+export function DeleteMHOK(key) {
+  db.read()
+
+  const MHOK = db.data.MHOK.filter((MHOK) => 
+       MHOK.MthTime  !== key.MthTime
+    || MHOK.BrokerId !== key.BrokerId
+    || MHOK.RecNo    !== key.RecNo
+  )
+  
+  db.data.MHOK = MHOK
+  db.write()
+
+  return 1;
+}

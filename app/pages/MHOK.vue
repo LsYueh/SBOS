@@ -95,9 +95,29 @@ const columns = [
       default: return `${OdrTpe}`
     }
   }},
-  { title: '流水號', field: 'SeqNo' },
-  // { title: '成交總檔編號', field: 'RecNo' },
-  // { title: '補送註記', field: 'MarkS' },
+  { title: '流水號', field: 'SeqNo', headerHozAlign: 'center', hozAlign: 'center', },
+  // { title: '成交總檔編號', field: 'RecNo', },
+  // { title: '補送註記', field: 'MarkS', },
+  {
+    title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
+    formatter: () => {
+      return '<i class="fas fa-trash text-danger" style="cursor:pointer;" />'
+    },
+    cellClick: async (e, cell) => {
+      const rowData = cell.getData()
+
+      if (!confirm(`確定刪除 委託書 ${rowData.OrderNo} ?`)) return
+
+      try {
+        // const res = await fetch(`/api/MHOK/`, { method: 'DELETE' })
+        // if (!res.ok) throw new Error('刪除失敗')
+      } catch (err) {
+        alert(err)
+      } finally {
+        viewMHOK.value.refresh()
+      }
+    }
+  },
 ]
 
 const viewMHOK = ref(null)

@@ -1,11 +1,11 @@
-import { defineEventHandler, getQuery, createError } from 'h3'
+import { defineEventHandler, readBody, createError } from 'h3'
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { ReadMHOK } from '../../dal/MHOK'
+import { DeleteMHOK } from '../../dal/MHOK'
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -13,6 +13,9 @@ import { ReadMHOK } from '../../dal/MHOK'
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
-  const query = getQuery(event);
-  return ReadMHOK(query);
+  const body = await readBody(event) // 解析 JSON body
+
+  // TODO: ...
+
+  return 0;
 })
