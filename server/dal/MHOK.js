@@ -11,7 +11,10 @@ import db from '../utils/db.js'
  * @returns 
  */
 function PK01(MHOK, R3) {
-  const cond = (MHOK.MthTime  === R3.MthTime.toISOString()) // Note: TeMPlar已補上年月日
+  // Note: TeMPlar已補上年月日
+  const MthTime = (R3.MthTime instanceof Date) ? R3.MthTime.toISOString() : R3.MthTime
+
+  const cond = (MHOK.MthTime  === MthTime)
             && (MHOK.BrokerId === R3.BrokerId)
             && (MHOK.RecNo    === R3.RecNo) // `分公司`加上`該TMP上的成交序號`應該是當日唯一
   ;
@@ -90,7 +93,7 @@ export function WriteMHOK(R3) {
 
 /**
  * @param {object} key 
- * @param {string} key.MthTime 
+ * @param {string} key.MthTime (ISO String)
  * @param {string} key.BrokerId 
  * @param {string} key.RecNo 
  * @returns affected rows
@@ -98,11 +101,10 @@ export function WriteMHOK(R3) {
 export function DeleteMHOK(key) {
   db.read()
 
-  const MHOK = db.data.MHOK.filter((MHOK) => 
-       MHOK.MthTime  !== key.MthTime
-    || MHOK.BrokerId !== key.BrokerId
-    || MHOK.RecNo    !== key.RecNo
-  )
+  const MHOK = db.data.MHOK.filter((MHOK) => !PK01(MHOK, key))
+
+  // 沒有變化
+  if (MHOK.length === db.data.MHOK.length) return 0
   
   db.data.MHOK = MHOK
   db.write()

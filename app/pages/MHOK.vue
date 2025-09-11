@@ -7,7 +7,11 @@
         <div class="col-md-3">
           <div class="input-group">
             <span class="input-group-text" for="transactionDate">交易日期</span>
-            <input id="transactionDate" v-model="transactionDate" type="date" class="form-control" readonly="true">
+            <input id="transactionDate" v-model="transactionDate" type="date" class="form-control" :readonly="isReadonly">
+            <button type="button" class="btn btn-outline-secondary" @click="toggleReadonly">
+              <i :class="isReadonly ? 'fas fa-lock' : 'fas fa-unlock'" />
+            </button>
+            <!-- '啟用錯帳模式' : '錯帳模式已啟用' -->
           </div>
         </div>
       </div>
@@ -61,6 +65,7 @@ const { $bootstrap, $dayjs } = useNuxtApp();
 
 /** 交易日期 */
 const transactionDate = ref($dayjs().format('YYYY-MM-DD'))
+const isReadonly = ref(true)
 
 /** 檔案 */
 const file = ref(null)
@@ -108,11 +113,20 @@ const columns = [
 
       if (!confirm(`確定刪除 委託書 ${rowData.OrderNo} ?`)) return
 
+
       try {
-        // const res = await fetch(`/api/MHOK/`, { method: 'DELETE' })
-        // if (!res.ok) throw new Error('刪除失敗')
+        const response = await $fetch(`/api/MHOK`, {
+          method: "DELETE",
+          body: {
+            MthTime : rowData.MthTime,
+            BrokerId: rowData.BrokerId,
+            RecNo   : rowData.RecNo,
+          }
+        })
+
+        alert(`異動資料${response.affectedRows}筆: ${response.message}`)
       } catch (err) {
-        alert(err)
+        alert("刪除失敗: " + err)
       } finally {
         viewMHOK.value.refresh()
       }
@@ -137,6 +151,10 @@ onMounted(async () => {
     modalInstance = new $bootstrap.Modal(modalRef.value, { backdrop: 'static' })
   }
 })
+
+function toggleReadonly() {
+  isReadonly.value = !isReadonly.value
+}
 
 function onFileChange(e) {
   file.value = e.target.files[0]
