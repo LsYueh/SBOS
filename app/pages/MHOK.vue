@@ -1,8 +1,6 @@
 <template>
-  <div class="container py-5">
-    <h1 class="text-xl font-bold mb-4">交易所成交回報上傳</h1>
-
-    <form class="space-y-4" @submit.prevent="handleUpload">
+  <div class="container py-3">
+    <form @submit.prevent="handleUpload">
       <div class="row mb-3">
         <div class="col-md-3">
           <div class="input-group">
@@ -58,6 +56,13 @@ import { onMounted, ref } from 'vue'
 import View from '~/components/View.vue'
 const { $bootstrap, $dayjs } = useNuxtApp();
 
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Page Meta
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+definePageMeta({
+  headerTitle: '交易所成交回報上傳 (MHOK)'
+})
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 
@@ -138,7 +143,6 @@ const viewMHOK = ref(null)
 let modalInstance = null
 const modalRef = ref(null)
 const message = ref('')
-
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events

@@ -2,7 +2,7 @@
   <header class="bg-primary text-white py-2 mb-4">
     <div class="container d-flex justify-content-between align-items-center">
       <h5 class="mb-0">
-        <i class="fas fa-building me-1"/> 證券帳務
+        <i class="fas fa-building me-1"/> {{ route.meta.headerTitle || '證券帳務' }}
       </h5>
 
       <div class="position-absolute start-50 translate-middle-x">
@@ -28,6 +28,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 

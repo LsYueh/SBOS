@@ -4,7 +4,7 @@ import { defineEventHandler, getQuery } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { ReadMHOK } from '../dal/MHOK'
+import { ReadMHIO } from '../dal/MHIO'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -18,5 +18,5 @@ export default defineEventHandler(async (event) => {
   const sortField = query.sortField || 'OrderNo'
   const sortDir = query.sortDir || 'asc'
 
-  return ReadMHOK({ page, size, sortField, sortDir });
+  return ReadMHIO({ page, size, sortField, sortDir });
 })
