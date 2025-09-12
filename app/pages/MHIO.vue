@@ -9,7 +9,12 @@
       </div>
     </div>
 
-    <View ref="viewMHIO" ajax-url="/api/MHIO" :columns="columns" @row-click="handleRowClick" />
+    <View ref="viewMHIO" ajax-url="/api/MHIO" :columns="columnsMHIO" @row-click="handleRowClick" />
+
+    <br>
+    
+    <View ref="viewMHOK" :ajax-url="apiUrl" :columns="columnsMHOK" />
+
   </div>
 </template>
 
@@ -34,7 +39,10 @@ definePageMeta({
 const transactionDate = ref($dayjs().format('YYYY-MM-DD'))
 
 /** Tabulator */
-const columns = [
+const viewMHIO = ref(null)
+const viewMHOK = ref(null)
+
+const columnsMHIO = [
   { title: '#', formatter: 'rownum', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false, },
   { title: '委託書編號', field: 'OrderNo' },
   { title: '證券代號', field: 'StkNo' },
@@ -74,7 +82,18 @@ const columns = [
   }},
 ]
 
-const viewMHIO = ref(null)
+const columnsMHOK = [
+  { title: '#', formatter: 'rownum', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false, },
+  { title: '數量', field: 'MthQty', widthGrow: 0.5, headerSort:false,  },
+  { title: '價格', field: 'MthPr', formatter: 'money', formatterParams: {
+    negativeSign: true,
+    precision: 4,
+  }},
+  { title: '時間', field: 'MthTime', formatter: (cell) => $dayjs(cell.getValue()).format('HH:mm:ss.SSS'), },
+  { title: '流水號', field: 'SeqNo', widthGrow: 0.8, headerHozAlign: 'center', hozAlign: 'center', },
+]
+
+const apiUrl = ref('')
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events
@@ -85,7 +104,9 @@ onMounted(async () => {
 })
 
 function handleRowClick(rowData) {
-  console.log("MHIO:", rowData)
+  const OrderNo = rowData.OrderNo
+  apiUrl.value = `/api/MHOK/${OrderNo}`
+  viewMHOK.value.refresh()
 }
 
 </script>

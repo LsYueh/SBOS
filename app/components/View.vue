@@ -17,6 +17,12 @@ const emit = defineEmits(['row-click'])
 const table = ref(null)
 let tabulatorInstance = null
 
+watch(() => props.ajaxUrl, (newUrl) => {
+  if (tabulatorInstance) {
+    tabulatorInstance.setData(newUrl) // 重新載入資料
+  }
+})
+
 onMounted(() => {
   tabulatorInstance = new Tabulator(table.value, {
     ajaxURL: props.ajaxUrl,

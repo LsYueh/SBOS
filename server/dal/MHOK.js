@@ -1,6 +1,20 @@
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
 import { compareObjectsByKeys } from './_helper.js'
 
 import db from '../utils/db.js'
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Day.js
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+// 預設用台北時區
+dayjs.tz.setDefault("Asia/Taipei")
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
@@ -47,6 +61,56 @@ export function ReadMHOK(input) {
       MthTime.getDate()     === transactionDate.getDate()
     );
   })
+
+  // 排序
+  MHOK = MHOK.sort((a, b) => {
+    const valA = a[sortField]
+    const valB = b[sortField]
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1
+    return 0
+  })
+
+  // 分頁
+  const start = (page - 1) * size
+  const end = start + size
+  const paginated = MHOK.slice(start, end)
+  const lastPage = Math.ceil(MHOK.length / size)
+
+  return {
+    data: paginated,
+    last_page: lastPage
+  }
+}
+
+/**
+ * @param {object} input 
+ * @param {Number} input.page 
+ * @param {Number} input.size 
+ * @param {String} input.sortField 
+ * @param {String} input.sortDir asc/dsc
+ * @param {String} input.OrderNo 委託書編號
+ * @returns 
+ */
+export function ReadMHOKWithOrderNo(input) {
+  const { page, size, sortField, sortDir, OrderNo } = input;
+  
+  db.read()
+  let MHOK = db.data.MHOK;
+
+  // 按日期篩選
+  const transactionDate = new Date();
+  MHOK = MHOK.filter((rec) => {
+    const MthTime = new Date(rec.MthTime)
+    return (
+      MthTime.getFullYear() === transactionDate.getFullYear() &&
+      MthTime.getMonth()    === transactionDate.getMonth() &&
+      MthTime.getDate()     === transactionDate.getDate()
+    );
+  })
+
+  // 委託書編號
+  MHOK = MHOK.filter((rec) => rec.OrderNo === OrderNo)
 
   // 排序
   MHOK = MHOK.sort((a, b) => {
