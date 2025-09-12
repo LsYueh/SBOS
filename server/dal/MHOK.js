@@ -1,3 +1,5 @@
+import { compareObjectsByKeys } from './_helper.js'
+
 import db from '../utils/db.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -11,14 +13,10 @@ import db from '../utils/db.js'
  * @returns 
  */
 function PK01(MHOK, R3) {
-  // Note: TeMPlar已補上年月日
-  const MthTime = (R3.MthTime instanceof Date) ? R3.MthTime.toISOString() : R3.MthTime
-
-  const cond = (MHOK.MthTime  === MthTime)
-            && (MHOK.BrokerId === R3.BrokerId)
-            && (MHOK.RecNo    === R3.RecNo) // `分公司`加上`該TMP上的成交序號`應該是當日唯一
-  ;
-  return cond
+  const keys = [
+    'MthTime', 'BrokerId', 'RecNo'
+  ]
+  return compareObjectsByKeys(MHOK, R3, keys)
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------

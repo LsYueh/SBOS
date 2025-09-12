@@ -79,14 +79,30 @@ const isUploading = ref(false)
 
 /** Tabulator */
 const columns = [
-  { title: '#', formatter: 'rownum', hozAlign: 'center', widthGrow: 0.2, headerSort:false, },
+  { title: '#', formatter: 'rownum', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false, },
   { title: '委託書編號', field: 'OrderNo' },
   { title: '證券代號', field: 'StkNo' },
   { title: '數量', field: 'MthQty', widthGrow: 0.5, headerSort:false,  },
-  { title: '價格', field: 'MthPr', formatter:"money", },
+  { title: '價格', field: 'MthPr', formatter: 'money', formatterParams: {
+    negativeSign: true,
+    precision: 4,
+  }},
   { title: '時間', field: 'MthTime', formatter: (cell) => $dayjs(cell.getValue()).format('HH:mm:ss.SSS'), },
-  { title: '交易類別', field: 'ExCd', widthGrow: 0.7, headerSort:false, formatter: (cell) => cell.getValue() === '0' ? '整股' : '零股' , },
-  { title: 'B/S', field: 'BuySell', widthGrow: 0.5, headerSort:false,  },
+  { title: '交易類別', field: 'ExCd', widthGrow: 0.7, headerSort:false, formatter: (cell) => {
+    switch (cell.getValue()) {
+      case '0': return `<span>整股</span>`;
+      case '2': return `<span class="text-success">零股</span>`;
+      default: return `<span>${cell.getValue()}</span>`
+    }
+  }},
+  { title: 'B/S', field: 'BuySell', widthGrow: 0.5, headerSort:false, formatter: (cell) => {
+    const BuySell = cell.getValue();
+    switch (BuySell) {
+      case 'B': return `<span class="badge bg-danger">買</span>`;
+      case 'S': return `<span class="badge bg-success">賣</span>`;
+      default: return `<span>${cell.getValue()}</span>`
+    }
+  }},
   { title: '帳號', field: '_Account_', headerSort:false, mutator:function(value, data){
     return `${data.BrokerId}-${data.IVAcNo}`
   }},
@@ -103,7 +119,7 @@ const columns = [
       default: return `${OdrTpe}`
     }
   }},
-  { title: '流水號', field: 'SeqNo', headerHozAlign: 'center', hozAlign: 'center', },
+  { title: '流水號', field: 'SeqNo', widthGrow: 0.8, headerHozAlign: 'center', hozAlign: 'center', },
   // { title: '成交總檔編號', field: 'RecNo', },
   // { title: '補送註記', field: 'MarkS', },
   {

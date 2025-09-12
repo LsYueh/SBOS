@@ -1,4 +1,4 @@
-import { defineEventHandler, createError } from 'h3'
+import { defineEventHandler } from 'h3'
 import fs from 'fs'
 
 import formidable from 'formidable'
@@ -17,8 +17,7 @@ import { Decoder } from '../../utils/decoder'
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 import { WriteMHOK } from '../../dal/MHOK'
-import { WriteMHIO } from '../../dal/MHIO'
-
+import { ReWriteMHIO } from '../../dal/MHIO'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 
@@ -31,7 +30,6 @@ const queue = new PQueue({concurrency: 1})
 dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.tz.setDefault('Asia/Taipei')
-
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
@@ -113,7 +111,7 @@ async function processFile(input, resolve, reject) {
       // PQueue
       await queue.add(() => {
         const affectedRows = WriteMHOK(R3); recCnt+=affectedRows;
-        if (affectedRows === 1) WriteMHIO(R3)
+        if (affectedRows === 1) ReWriteMHIO(R3)
       });
     }
   })
@@ -127,7 +125,6 @@ async function processFile(input, resolve, reject) {
     reject(error)
   })
 }
-
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
