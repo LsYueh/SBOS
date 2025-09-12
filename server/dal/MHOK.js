@@ -27,14 +27,15 @@ function PK01(MHOK, R3) {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * @param {import('ufo').QueryObject} query 
+ * @param {object} input 
+ * @param {Number} input.page 
+ * @param {Number} input.size 
+ * @param {String} input.sortField 
+ * @param {String} input.sortDir asc/dsc
  * @returns 
  */
-export function ReadMHOK(query) {
-  const page = Number(query.page) || 1
-  const size = Number(query.size) || 5
-  const sortField = query.sortField || 'OrderNo'
-  const sortDir = query.sortDir || 'asc'
+export function ReadMHOK(input) {
+  const { page, size, sortField, sortDir } = input;
 
   db.read()
   let MHOK = db.data.MHOK;

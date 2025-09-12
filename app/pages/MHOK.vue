@@ -27,7 +27,7 @@
       </div>
     </form>
 
-    <TabulatorTable ref="viewMHOK" :ajax-url="apiUrl" :columns="columns" />
+    <View ref="viewMHOK" ajax-url="/api/MHOK" :columns="columns" />
 
     <!-- Bootstrap Modal -->
     <div id="messageModal" ref="modalRef" class="modal fade" tabindex="-1"
@@ -55,7 +55,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import TabulatorTable from '~/components/TabulatorTable.vue'
+import View from '~/components/View.vue'
 const { $bootstrap, $dayjs } = useNuxtApp();
 
 
@@ -73,8 +73,6 @@ const fileInput = ref(null)
 const isUploading = ref(false)
 
 /** Tabulator */
-const apiUrl = '/api/MHOK/find'
-
 const columns = [
   { title: '#', formatter: 'rownum', hozAlign: 'center', widthGrow: 0.2, headerSort:false, },
   { title: '委託書編號', field: 'OrderNo' },
