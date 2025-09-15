@@ -17,6 +17,22 @@
       "args": [
         "dev"
       ],
+    },
+    {
+      "name": "Debug single TAP test file",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/tap",
+      "args": [
+          "server/dal/HLD.test.js",
+          "--allow-empty-coverage", "--disable-coverage",
+          "-t", "0"
+      ],
+      "console": "integratedTerminal",
+      "runtimeArgs": ["--inspect-brk"],
+      "windows": {
+          "program": "${workspaceFolder}/node_modules/.bin/tap.cmd"
+      }
     }
   ],
   "compounds": [

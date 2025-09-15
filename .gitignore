@@ -154,3 +154,6 @@ dist
 test-data
 db.json
 package-lock.json
+
+#
+.tap
