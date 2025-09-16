@@ -1,44 +1,117 @@
 <template>
-  <header class="bg-primary text-white py-2 mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <NuxtLink to="/" class="navbar-brand">
         <i class="fas fa-building me-1"/> {{ route.meta.headerTitle || '證券帳務' }}
-      </h5>
+      </NuxtLink>
 
-      <div class="position-absolute start-50 translate-middle-x">
-        {{ clock }}
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNavbar"
+      >
+        <span class="navbar-toggler-icon"/>
+      </button>
+
+      <!-- 導覽選單 -->
+      <div v-if="user.isLoggedIn" id="mainNavbar" class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <NuxtLink class="nav-link" to="/dashboard">儀表板</NuxtLink>
+          </li>
+
+          <!-- Menu -->
+          <li v-if="filteredMenuGroups.length" class="nav-item dropdown position-static">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              功能選單
+            </a>
+            <div class="dropdown-menu w-100 mt-0 p-3 border-0 shadow">
+              <div class="container">
+                <div class="row">
+                  <div v-for="(group, gIndex) in filteredMenuGroups" :key="gIndex" class="col-md-3">
+                    <h6 class="text-uppercase">{{ group.title }}</h6>
+                    <ul class="list-unstyled">
+                      <li v-for="(item, iIndex) in group.items" :key="iIndex">
+                        <NuxtLink class="dropdown-item" :to="item.to">{{ item.label }}</NuxtLink>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <!-- 右側 -->
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item me-2"><NuxtLink class="nav-link" to="/profile">個人資料</NuxtLink></li>
+          <li class="nav-item me-2">
+            <span class="navbar-text">{{ user.username }}</span>
+          </li>
+          <li class="nav-item me-2">
+            <span class="navbar-text" style="font-family: monospace;">{{ clock }}</span>
+          </li>
+          <li class="nav-item">
+            <button ref="logoutBtn" class="btn btn-link nav-link" title="登出" @click="handleLogout"><i class="fas fa-sign-out-alt me-1"/></button>
+          </li>
+        </ul>
       </div>
-
-      <!-- 登出 -->
-      <div v-if="user.isLoggedIn" class="d-flex align-items-center">
-        <span>
-          <i class="fas fa-user me-1"/>
-        </span>
-        <span class="me-2">{{ user.username }}</span>
-        <span title="登出" style="cursor: pointer;" @click="handleLogout">
-          <i class="fas fa-sign-out-alt me-1"/>
-        </span>
-      </div>
-
     </div>
-  </header>
+  </nav>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+const { $bootstrap } = useNuxtApp();
 
 const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 
-// 時鐘
+const logoutBtn = ref(null)
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Menu
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+// 假設登入者有多角色（實務上應該從登入 API 或 Pinia/Vuex state 拿）
+const currentUserRoles = ['manager', 'user']
+
+// 從 API 抓選單
+const { data: menuGroups } = await useFetch('/api/menu')
+
+// 判斷是否允許顯示某個項目
+function canAccess(itemRoles, userRoles) {
+  return itemRoles.some(role => userRoles.includes(role))
+}
+
+// 根據角色過濾
+const filteredMenuGroups = computed(() => {
+  if (!menuGroups.value) return []
+  return menuGroups.value
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => canAccess(item.roles, currentUserRoles))
+    }))
+    .filter(group => group.items.length > 0)
+})
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 時鐘
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
 const clock = ref('')
 let timer = null
 function updateClock() {
   const now = new Date()
   clock.value = now.toLocaleTimeString('zh-TW', { hour12: true })
 }
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events
+---------+---------+---------+---------+---------+---------+---------+--------*/
 
 function handleLogout() {
   user.logout()
@@ -48,6 +121,11 @@ function handleLogout() {
 onMounted(() => {
   updateClock()
   timer = setInterval(updateClock, 500)
+
+  // 初始化 Bootstrap Tooltip
+  if (logoutBtn.value) {
+    new $bootstrap.Tooltip(logoutBtn.value)
+  }
 })
 
 onUnmounted(() => {
