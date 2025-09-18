@@ -166,7 +166,7 @@ onMounted(() => {
   }
 })
 
-const openModal = (user = null) => {
+function openModal(user = null) {
   if (user) {
     Object.assign(form, user)
   } else {
@@ -176,7 +176,7 @@ const openModal = (user = null) => {
 }
 
 // 儲存（新增/更新）
-const saveUser = async () => {
+async function saveUser() {
   try {
     if (form.id) {
       const _r = await $fetch(`/api/TLB/${form.id}`, { method: 'PUT', body: { ...form } })
@@ -194,7 +194,7 @@ const saveUser = async () => {
 }
 
 // 刪除
-const deleteUser = async (id) => {
+async function deleteUser(id) {
   if (!confirm('確定要刪除這個使用者嗎？')) return
   try {
     const _r = await $fetch(`/api/TLB/${id}`, { method: 'DELETE' })
@@ -206,7 +206,7 @@ const deleteUser = async (id) => {
 }
 
 // 重設表單
-const resetForm = () => {
+function resetForm() {
   form.id = null
   form.username = ''
   form.name = ''
