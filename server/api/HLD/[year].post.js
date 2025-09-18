@@ -1,4 +1,4 @@
-import { defineEventHandler, getQuery, createError } from 'h3'
+import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
 
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -43,6 +43,9 @@ function toYear(str) {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
+  const year = toYear(getRouterParam(event, 'year'))
+  const body = await readBody(event)
+
   throw createError({
     statusCode: 501,
     statusMessage: "本功能尚未開放"

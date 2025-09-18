@@ -1,4 +1,4 @@
-import { defineEventHandler, getQuery } from 'h3'
+import { defineEventHandler, getQuery, getRouterParam } from 'h3'
 
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -57,7 +57,7 @@ function buildDateStr(year, month, day) {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
-  const year = toYear(event.context.params.year)
+  const year = toYear(getRouterParam(event, 'year'))
   const query = getQuery(event);
 
   const countryCode = query.countrycode || 'TWN'

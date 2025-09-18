@@ -5,7 +5,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { DeleteMHOK } from '../dal/MHOK'
+import { DeleteMHOK } from '../../dal/MHOK'
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
