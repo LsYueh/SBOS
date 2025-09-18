@@ -77,7 +77,7 @@ const logoutBtn = ref(null)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 // 假設登入者有多角色（實務上應該從登入 API 或 Pinia/Vuex state 拿）
-const currentUserRoles = ['manager', 'user']
+const currentUserRoles = ['admin']
 
 // 從 API 抓選單
 const { data: menuGroups } = await useFetch('/api/menu')
