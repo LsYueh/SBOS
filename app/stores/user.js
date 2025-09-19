@@ -2,11 +2,15 @@
 
 import { defineStore } from 'pinia'
 
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Export Store
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
 export const useUserStore = defineStore('user', {
   state: () => ({
+    token: '',
     username: '',
     isLoggedIn: false,
-    token: '' // 主要在 cookie 裡儲存
   }),
   actions: {
     /**
@@ -16,24 +20,21 @@ export const useUserStore = defineStore('user', {
      */
     async login(username, password) {
       try {
-        // 模擬 API
-        const fakeApi = (u, p) =>
-          new Promise((resolve, reject) => {
-            setTimeout(() => {
-              if (u === 'admin\\root' && p === '0000') resolve({ token: 'abcd1234' })
-              else reject(new Error('帳號或密碼錯誤'))
-            }, 500)
-          })
-
-        const res = await fakeApi(username, password)
+        const res = await $fetch('/api/auth', {
+          method: 'POST',
+          body: { username, password }
+        })
         
         this.username = username
-        this.isLoggedIn = true
         this.token = res.token
+        this.isLoggedIn = true
 
-        // 用 Nuxt useCookie 儲存 token
+        // 用 Nuxt useCookie 儲存 username與token
         const tokenCookie = useCookie('token', { maxAge: 60 * 60 * 24 }) // 1 天
         tokenCookie.value = res.token
+
+        const usernameCookie = useCookie('username', { maxAge: 60 * 60 * 24 }) // 1 天
+        usernameCookie.value = username
 
         return true
       } catch (err) {
@@ -43,11 +44,15 @@ export const useUserStore = defineStore('user', {
     },
 
     logout() {
+      this.token = ''
       this.username = ''
       this.isLoggedIn = false
-      this.token = ''
+
       const tokenCookie = useCookie('token')
       tokenCookie.value = null
+
+      const usernameCookie = useCookie('username')
+      usernameCookie.value = null
     },
 
     loadFromCookie() {
@@ -55,9 +60,11 @@ export const useUserStore = defineStore('user', {
       if (tokenCookie.value) {
         this.token = tokenCookie.value
         this.isLoggedIn = true
-        
-        // TODO: 把 username 從 cookie 或 API 取回
-        this.username = '000000'
+      }
+
+      const usernameCookie = useCookie('username')
+      if (usernameCookie.value) {
+        this.username = usernameCookie.value
       }
     }
   }

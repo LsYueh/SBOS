@@ -46,10 +46,12 @@ async function submitLogin() {
     errorMsg.value = '請填寫 AD 帳號與密碼'
     return
   }
-  if (!validateADUsername(username.value)) {
-    errorMsg.value = '請輸入有效的 AD 帳號格式 (DOMAIN\\username 或 username@domain.com)'
-    return
-  }
+
+  // Note: 看情況使用
+  // if (!validateADUsername(username.value)) {
+  //   errorMsg.value = '請輸入有效的 AD 帳號格式 (DOMAIN\\username 或 username@domain.com)'
+  //   return
+  // }
 
   try {
     await user.login(username.value, password.value)
@@ -76,7 +78,7 @@ async function submitLogin() {
             <i class="fas fa-user"/> 帳號
           </label>
           <input id="username" v-model="username" type="text" class="form-control"
-            placeholder="DOMAIN\username 或 username@domain.com" required >
+            placeholder="輸入帳號" required >
         </div>
 
         <!-- 密碼 -->
