@@ -161,3 +161,6 @@ package-lock.json
 # PostgreSQL
 backups
 pgdata
+
+# Sequelize
+out-models
