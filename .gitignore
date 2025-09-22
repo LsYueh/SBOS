@@ -157,3 +157,7 @@ package-lock.json
 
 #
 .tap
+
+# PostgreSQL
+backups
+pgdata
