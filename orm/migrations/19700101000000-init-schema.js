@@ -52,7 +52,7 @@ export async function down(queryInterface, Sequelize) {
 
   for (const file of files) {
     const sqlPath = path.join(sqlDir, file);
-    const sql = fs.readFileSync(sqlPath, 'utf8');
+    const sql = fs.readFileSync(sqlPath, 'utf8').replace(/^COMMENT ON[\s\S]*?;\s*\n*/gim, ''); // 移除所有 COMMENT ON 段落
 
     // 嘗試將 CREATE 語法轉換成 DROP
     const rollbackSQL = sql
@@ -78,7 +78,7 @@ export async function down(queryInterface, Sequelize) {
     )
 
     console.log(`Rolling back SQL file: ${file}`);
-    // console.log(rollbackSQL);
+    console.log(rollbackSQL);
     
     if (rollbackSQL.trim()) {
       await queryInterface.sequelize.query(rollbackSQL);
