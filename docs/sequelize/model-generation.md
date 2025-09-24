@@ -24,7 +24,7 @@ MSSQL | `npm install sequelize tedious`
 執行指令：
 
 ```bash
-npx sequelize-auto -o "./out-models" -d postgres -h 127.0.0.1 -u db-admin -p 5432 -x db-passwd -e postgres --lang esm
+npx sequelize-auto -o "./out-models" -d postgres -h 127.0.0.1 -u sbos-db-user -p 5432 -x db-passwd -e postgres --lang esm
 ```
 
 ## 參數說明

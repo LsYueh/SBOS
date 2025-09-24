@@ -2,7 +2,6 @@
 
 `.env` 設定：
 ```
-POSTGRES_USER=db-admin
 POSTGRES_PASSWORD=db-passwd
 POSTGRES_DB=postgres
 ```
@@ -12,7 +11,7 @@ POSTGRES_DB=postgres
 # 備份單一資料庫
 
 ```bash
-docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dump -U db-admin postgres > ./backups/postgres_backup.sql
+docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dump -U sbos-db-user postgres > ./backups/postgres_backup.sql
 ```
 
 **說明：**
@@ -26,7 +25,7 @@ docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dump -U db-admin post
 # 備份所有資料庫
 
 ```bash
-docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dumpall -U db-admin > ./backups/all_databases_backup.sql
+docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dumpall -U sbos-db-user > ./backups/all_databases_backup.sql
 ```
 
 * 適合整個 PostgreSQL instance 的完整備份。
@@ -36,7 +35,7 @@ docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dumpall -U db-admin >
 # 確認資料庫是否存在
 
 ```bash
-docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -l
+docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U sbos-db-user -l
 ```
 
 * `-l` 會列出 PostgreSQL 中所有資料庫。
@@ -47,7 +46,7 @@ docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -l
 # 建立資料庫（如果不存在）
 
 ```bash
-docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -c "CREATE DATABASE postgres;"
+docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U sbos-db-user -c "CREATE DATABASE postgres;"
 ```
 
 **說明：**
@@ -56,8 +55,8 @@ docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -c "CREATE D
 * `(慎用)` 如果資料庫已存在，這行會報錯，可忽略或先刪除再重建：
 
   ```bash
-  docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -c "DROP DATABASE IF EXISTS postgres;"
-  docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -c "CREATE DATABASE postgres;"
+  docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U sbos-db-user -c "DROP DATABASE IF EXISTS postgres;"
+  docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U sbos-db-user -c "CREATE DATABASE postgres;"
   ```
 
 <br>
@@ -65,7 +64,7 @@ docker exec -i -e PGPASSWORD=db-passwd my_postgres psql -U db-admin -c "CREATE D
 # 還原單一資料庫
 
 ```bash
-docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 psql -U db-admin -d postgres < ./backups/postgres_backup.sql
+docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 psql -U sbos-db-user -d postgres < ./backups/postgres_backup.sql
 ```
 
 **說明：**
@@ -78,7 +77,7 @@ docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 psql -U db-admin -d post
 # 還原所有資料庫（pg\_dumpall）
 
 ```bash
-cat ./backups/all_databases_backup.sql | docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 psql -U db-admin
+cat ./backups/all_databases_backup.sql | docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 psql -U sbos-db-user
 ```
 
 <br>
@@ -87,10 +86,10 @@ cat ./backups/all_databases_backup.sql | docker exec -i -e PGPASSWORD=db-passwd 
 
 ```bash
 # 生成壓縮備份
-docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dump -U db-admin -Fc postgres > ./backups/postgres_backup.dump
+docker exec -e PGPASSWORD=db-passwd -t sbos-postgres-17 pg_dump -U sbos-db-user -Fc postgres > ./backups/postgres_backup.dump
 
 # 還原壓縮備份
-docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 pg_restore -U db-admin -d postgres < ./backups/postgres_backup.dump
+docker exec -i -e PGPASSWORD=db-passwd sbos-postgres-17 pg_restore -U sbos-db-user -d postgres < ./backups/postgres_backup.dump
 ```
 
 * `-Fc` → 自訂壓縮格式，支援增量恢復與部分還原。

@@ -2,7 +2,6 @@
 
 `.env` 設定：
 ```
-POSTGRES_USER=db-admin
 POSTGRES_PASSWORD=db-passwd
 POSTGRES_DB=postgres
 ```
@@ -38,7 +37,7 @@ POSTGRES_DB=postgres
 
 ```yaml
 environment:
-  POSTGRES_USER: ${POSTGRES_USER}       # 必須是 superuser
+  POSTGRES_USER: sbos-db-user       # 必須是 superuser
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   POSTGRES_DB: ${POSTGRES_DB}
 ```
@@ -52,7 +51,7 @@ environment:
 執行：
 
 ```bash
-docker exec sbos-postgres-17 pg_basebackup -U db-admin -v -P -Ft -Z5 -D /backups/sbos-backup-$(date +%F_%H%M%S)
+docker exec sbos-postgres-17 pg_basebackup -U sbos-db-user -v -P -Ft -Z5 -D /backups/sbos-backup-$(date +%F_%H%M%S)
 ```
 * `-U`：使用者
 * `-P`：顯示進度
