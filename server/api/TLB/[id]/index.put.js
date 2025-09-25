@@ -4,7 +4,7 @@ import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { updateUser } from '../../dal/TLB.js'
+import { updateUser } from '../../../dal/TLB.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: '缺少 id' })
   }
 
-  const updated = updateUser(id, body)
+  const updated = await updateUser(id, body)
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: '找不到使用者' })
   }

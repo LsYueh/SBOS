@@ -15,8 +15,8 @@ export default defineEventHandler(async (event) => {
 
   const page = Number(query.page) || 1
   const size = Number(query.size) || 5
-  const sortField = query.sortField || 'SeqNo'
-  const sortDir = query.sortDir || 'asc'
+  const sortField = query.sortField || ''
+  const sortDir = query.sortDir || ''
 
-  return getUsers({ page, size, sortField, sortDir })
+  return await getUsers({ page, size, sortField, sortDir })
 })

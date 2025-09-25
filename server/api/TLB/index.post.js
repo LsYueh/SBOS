@@ -13,9 +13,9 @@ import { createUser } from '../../dal/TLB.js'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  if (!body.username || !body.email) {
-    throw createError({ statusCode: 400, statusMessage: 'username 與 email 必填' })
+  if (!body.username || !body.name) {
+    throw createError({ statusCode: 400, statusMessage: 'username 與 name 必填' })
   }
 
-  return createUser(body)
+  return await createUser(body)
 })

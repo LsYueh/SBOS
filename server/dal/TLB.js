@@ -1,22 +1,12 @@
+import { usePgPool } from '../utils/db.js'
+
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Dummy Users
+ * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-let users = [
-  {
-    id: 1,
-    username: 'admin',
-    name: '管理員',
-    email: 'admin@example.com',
-    role: 'admin',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: null,
-  }
-]
-
-let nextId = 2
+/** Database Pool */
+const pool = usePgPool()
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Exports
@@ -27,28 +17,32 @@ let nextId = 2
  * @param {Number} input.page 
  * @param {Number} input.size 
  * @param {String} input.sortField 
- * @param {String} input.sortDir asc/dsc
+ * @param {'ASC'|'DESC'} input.sortDir
  * @returns 
  */
-export function getUsers(input) {
+export async function getUsers(input) {
   const { page, size, sortField, sortDir } = input;
+  const offset = (page - 1) * size
 
-  let TLB = users;
+  const countResult = await pool.query('SELECT COUNT(*) FROM sbos.tlb')
+  const total = parseInt(countResult.rows[0].count, 10)
 
-  // 排序
-  TLB = TLB.sort((a, b) => {
-    const valA = a[sortField]
-    const valB = b[sortField]
-    if (valA < valB) return sortDir === 'asc' ? -1 : 1
-    if (valA > valB) return sortDir === 'asc' ? 1 : -1
-    return 0
-  })
+  // Note: 怕被掃出SQL注入，暫時不這樣用
+  // const allowedSortFields = {
+  //   username: 'username',
+  // }
+  // const safeSortField = allowedSortFields[sortField] || 'username'
+  // const safeSortOrder = sortDir === 'DESC' ? 'DESC' : 'ASC'
+
+  const dataResult = await pool.query(`
+    SELECT * FROM sbos.tlb
+    ORDER BY username ASC
+    LIMIT $1 OFFSET $2
+  `, [size, offset])
 
   // 分頁
-  const start = (page - 1) * size
-  const end = start + size
-  const paginated = TLB.slice(start, end)
-  const lastPage = Math.ceil(TLB.length / size)
+  const paginated = dataResult.rows
+  const lastPage = Math.ceil(total / size)
 
   return {
     data: paginated,
@@ -57,63 +51,90 @@ export function getUsers(input) {
 }
 
 /**
- * 
- * @param {String} id 
- * @returns 
- */
-export function getUserById(id) {
-  return users.find(u => u.id === Number(id)) || null
-}
-
-/**
- * 
  * @param {Object} data 
  * @returns 
  */
-export function createUser(data) {
-  const newUser = {
-    id: nextId++,
-    username: data.username,
-    name: data.name,
-    email: data.email,
-    role: data.role || 'user',
-    status: data.status || 'active',
-    avatar: data.avatar || '',
-    note: data.note || '',
-    createdAt: new Date().toISOString(),
-    updatedAt: null,
-  }
-  users.push(newUser)
-  return newUser
+export async function createUser(data) {
+  const {
+    created_by, modified_by,
+    username, name, comment,
+  } = data
+
+  const query = `INSERT INTO sbos.tlb (created_by, modified_by, username, name, comment) VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+  const values = [ created_by, modified_by, username, name, comment ];
+
+  const res = await pool.query(query, values);
+  return res.rows[0];
 }
 
 /**
- * 
- * @param {Number} id 
+ * @param {string} id (UUIDv1)
  * @param {Object} data 
  * @returns 
  */
-export function updateUser(id, data) {
-  const idx = users.findIndex(u => u.id === Number(id))
-  if (idx === -1) return null
+export async function updateUser(id, data) {
+  const {
+    modified_by,
+    username, name, comment,
+  } = data
 
-  users[idx] = {
-    ...users[idx],
-    ...data,
-    updatedAt: new Date().toISOString(),
-  }
-  return users[idx]
+  const query = `
+    UPDATE sbos.tlb 
+    SET modified_by = $1, updated_at = now(), username=$2, "name"=$3, "comment"=$4 
+    WHERE id=$5::uuid 
+    RETURNING *
+  `;
+  const values = [ modified_by, username, name, comment, id ];
+
+  const res = await pool.query(query, values);
+  return res.rows[0];
 }
 
 /**
- * 
- * @param {Number} id 
+ * @param {string} id (UUIDv1)
+ * @param {Object} data 
  * @returns 
  */
-export function deleteUser(id) {
-  const idx = users.findIndex(u => u.id === Number(id))
-  if (idx === -1) return false
+export async function enableUser(id, data) {
+  const { modified_by } = data
 
-  users.splice(idx, 1)
-  return true
+  const query = `
+    UPDATE sbos.tlb 
+    SET modified_by = $1, updated_at = now(), deleted_at = NULL
+    WHERE id=$2::uuid 
+    RETURNING *
+  `;
+
+  const res = await pool.query(query, [modified_by, id]);
+  return res.rows[0];
+}
+
+/**
+ * @param {string} id (UUIDv1)
+ * @param {Object} data 
+ * @returns 
+ */
+export async function disableUser(id, data) {
+  const { modified_by } = data
+
+  const query = `
+    UPDATE sbos.tlb 
+    SET modified_by = $1, updated_at = now(), deleted_at = now() 
+    WHERE id=$2::uuid 
+    RETURNING *
+  `;
+
+  const res = await pool.query(query, [modified_by, id]);
+  return res.rows[0];
+}
+
+/**
+ * @param {string} id (UUIDv1)
+ * @returns 
+ */
+export async function deleteUser(id) {
+  const query = `DELETE FROM sbos.tlb WHERE id=$1::uuid`
+
+  const res = await pool.query(query, [id]);
+  return true;
 }

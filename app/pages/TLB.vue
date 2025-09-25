@@ -21,29 +21,15 @@
             <form @submit.prevent="saveUser">
               <div class="mb-3">
                 <label class="form-label">帳號</label>
-                <input v-model="form.username" type="text" class="form-control" required>
+                <input v-model="form.username" type="text" class="form-control" :disabled="!!form.id" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">姓名</label>
                 <input v-model="form.name" type="text" class="form-control" required>
               </div>
               <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input v-model="form.email" type="email" class="form-control" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">角色</label>
-                <select v-model="form.role" class="form-select">
-                  <option value="user">使用者</option>
-                  <option value="admin">管理員</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">狀態</label>
-                <select v-model="form.status" class="form-select">
-                  <option value="active">啟用</option>
-                  <option value="inactive">停用</option>
-                </select>
+                <label class="form-label">說明</label>
+                <input v-model="form.comment" type="text" class="form-control" required>
               </div>
               <button type="submit" class="btn btn-success me-2">儲存</button>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForm">取消</button>
@@ -71,7 +57,9 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import View from '~/components/View.vue'
-const { $bootstrap } = useNuxtApp();
+const { $bootstrap, $dayjs } = useNuxtApp();
+
+const user = useUserStore()
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Page Meta
@@ -112,9 +100,13 @@ const form = reactive({
   id: null,
   username: '',
   name: '',
-  email: '',
-  role: 'user',
-  status: 'active',
+  comment: '',
+
+  created_by: '',
+  created_at: null,
+  modified_by: '',
+  updated_at: null,
+  deleted_at: null,
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -126,30 +118,36 @@ const columns = [
   {
     title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
     formatter: () => {
-      return '<i class="fas fa-trash text-danger" style="cursor:pointer;" />'
-    },
-    cellClick: async (e, cell) => {
-      const TLB = cell.getData()
-      deleteUser(TLB.id)
-    }
-  },
-  { title: 'ID', field: 'id' },
-  { title: '帳號', field: 'username' },
-  { title: '姓名', field: 'name' },
-  { title: 'Email', field: 'email' },
-  { title: '角色', field: 'status', headerSort:false, formatter: (cell) => {
-    const status = cell.getValue();
-    const bg = (status === 'active') ? 'bg-success' : 'bg-secondary'
-    return `<span class="badge ${bg}">${status}</span>`;
-  }},
-  {
-    title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
-    formatter: () => {
       return '<i class="fas fa-pen-to-square text-primary" style="cursor:pointer;" />'
     },
     cellClick: async (e, cell) => {
       const TLB = cell.getData()
       openModal(TLB)
+    }
+  },
+  { title: '帳號', field: 'username', widthGrow: 0.5 },
+  { title: '姓名', field: 'name', widthGrow: 0.5 },
+  { title: '說明', field: 'comment' },
+  { title: '建立時間', field: 'created_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
+  { title: '更新時間', field: 'updated_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
+  {
+    title: '狀態', field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
+    formatter: (cell) => {
+      const deletedAt = cell.getValue()
+
+      if (deletedAt) cell.getRow().getElement().style.opacity = 0.5
+      
+      return `<i class="fas ${deletedAt ? 'fa-eye-slash' : 'fa-eye'}" style="cursor:pointer;" />`
+    },
+    cellClick: async (e, cell) => {
+      if (!confirm('確定要停用這個使用者嗎？')) return
+
+      // 淡出效果
+      // cell.getRow().getElement().style.transition = "opacity 0.5s";
+      // cell.getRow().getElement().style.opacity = 0;
+
+      const TLB = cell.getData()
+      await alterUser(TLB.id, TLB.deleted_at)
     }
   },
 ]
@@ -179,9 +177,12 @@ function openModal(user = null) {
 async function saveUser() {
   try {
     if (form.id) {
+      form.modified_by = user.username
       const _r = await $fetch(`/api/TLB/${form.id}`, { method: 'PUT', body: { ...form } })
       showToast('使用者更新成功', 'success')
     } else {
+      form.created_by = user.username
+      form.modified_by = user.username
       const _r = await $fetch('/api/TLB', { method: 'POST', body: { ...form } })
       showToast('使用者新增成功', 'success')
     }
@@ -193,15 +194,18 @@ async function saveUser() {
   }
 }
 
-// 刪除
-async function deleteUser(id) {
-  if (!confirm('確定要刪除這個使用者嗎？')) return
+/**
+ * @param id 
+ * @param deleted_at 
+ */
+async function alterUser(id, deleted_at) {
   try {
-    const _r = await $fetch(`/api/TLB/${id}`, { method: 'DELETE' })
-    showToast('刪除成功', 'success')
+    form.modified_by = user.username
+    const statusTo = deleted_at ? 'Y' : 'N'
+    const _r = await $fetch(`/api/TLB/${id}/alter`, { method: 'POST', body: { status: statusTo, ...form } })
     viewTLB.value.refresh()
   } catch (err) {
-    showToast(`刪除失敗: ${err}`, 'danger')
+    showToast(`變更失敗: ${err}`, 'danger')
   }
 }
 
@@ -210,9 +214,13 @@ function resetForm() {
   form.id = null
   form.username = ''
   form.name = ''
-  form.email = ''
-  form.role = 'user'
-  form.status = 'active'
+  form.comment = ''
+
+  form.created_by = ''
+  form.created_at = null
+  form.modified_by = ''
+  form.updated_at = null
+  form.deleted_at = null
 }
 </script>
 
