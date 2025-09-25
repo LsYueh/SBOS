@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { rollbackSQL } from '../utils.js'
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -52,36 +54,15 @@ export async function down(queryInterface, Sequelize) {
 
   for (const file of files) {
     const sqlPath = path.join(sqlDir, file);
-    const sql = fs.readFileSync(sqlPath, 'utf8').replace(/^COMMENT ON[\s\S]*?;\s*\n*/gim, ''); // 移除所有 COMMENT ON 段落
+    const sql = fs.readFileSync(sqlPath, 'utf8')
 
-    // 嘗試將 CREATE 語法轉換成 DROP
-    const rollbackSQL = sql
-    .replace( // Table
-      /CREATE TABLE IF NOT EXISTS\s+"?(\w+)"?.*?;/gis,
-      'DROP TABLE IF EXISTS "$1";'
-    )
-    .replace( // Extension
-      /CREATE EXTENSION IF NOT EXISTS\s+"?(\w+)"?\s*;/gis,
-      'DROP EXTENSION IF EXISTS "$1";'
-    )
-    .replace( // Index
-      /CREATE (UNIQUE )?INDEX IF NOT EXISTS\s+"?(\w+)"?.*?;/gis,
-      'DROP INDEX IF EXISTS "$2";'
-    )
-    .replace( // View
-      /CREATE(?: OR REPLACE)? VIEW\s+"?(\w+)"?.*?AS.*?;/gis,
-      'DROP VIEW IF EXISTS "$1";'
-    )
-    .replace( // Sequence
-      /CREATE SEQUENCE IF NOT EXISTS\s+"?(\w+)"?.*?;/gis,
-      'DROP SEQUENCE IF EXISTS "$1";'
-    )
+    const rollbackQuery = rollbackSQL(sql);
 
     console.log(`Rolling back SQL file: ${file}`);
-    console.log(rollbackSQL);
+    console.log(rollbackQuery);
     
-    if (rollbackSQL.trim()) {
-      await queryInterface.sequelize.query(rollbackSQL);
+    if (rollbackQuery) {
+      await queryInterface.sequelize.query(rollbackQuery);
     }
   }
   
