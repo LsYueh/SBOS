@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS sbos.tlb (
 	id uuid DEFAULT uuid_generate_v1() NOT NULL, -- UUIDv1
 	username varchar(255) NOT NULL, -- 帳號
 	"name" varchar(255) NOT NULL, -- 姓名
+	role_id uuid NOT NULL, -- 角色 (UUIDv1)
 	"comment" text NULL, -- 說明
 	CONSTRAINT tlb_pkey PRIMARY KEY (id),
 	CONSTRAINT tlb_unique UNIQUE (username)
@@ -17,4 +18,5 @@ COMMENT ON COLUMN sbos.tlb.modified_by IS '異動人員';
 COMMENT ON COLUMN sbos.tlb.id IS 'UUIDv1';
 COMMENT ON COLUMN sbos.tlb.username IS '帳號';
 COMMENT ON COLUMN sbos.tlb."name" IS '姓名';
+COMMENT ON COLUMN sbos.tlb.role_id IS '角色 (UUIDv1)';
 COMMENT ON COLUMN sbos.tlb."comment" IS '說明';

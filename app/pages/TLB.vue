@@ -130,6 +130,7 @@ const columns = [
   { title: '說明', field: 'comment' },
   { title: '建立時間', field: 'created_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
   { title: '更新時間', field: 'updated_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
+  { title: '角色', field: 'role_title', widthGrow: 0.3, headerSort:false },
   {
     title: '狀態', field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
     formatter: (cell) => {

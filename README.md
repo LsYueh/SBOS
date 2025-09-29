@@ -3,9 +3,9 @@ Securities Back-Office System - 證券帳務系統
 
 這是一個源自`凌群電腦`-`豪賣`的帳務系統，主要由`MHIO`(股票成交進出明細)、`MFIO`(交易進出明細)為核心組成。  
 
-<br><br>
+<br>
 
-# 資料庫
+## 注意事項
 
 自己從Rocket Software（原`Micro Focus`）COBOL的 `Vision` (ISAM) 用到 Microsoft `SQL Server`，在進到用甲骨文(Oracle)的 `Oracle 11g`，商用資料庫標榜的從來不是先進，而是高可靠與維護性。而只要跟`金錢`扯上關係的，對其資料記錄的安全性又更不能不謹慎。  
 
@@ -15,10 +15,9 @@ Securities Back-Office System - 證券帳務系統
 
 # 初次使用設定
 
-請先新增`.env`並加入`INITIAL_ADMIN_PASSWORD`來啟用初次系統設定用的`本地管理員`  
-```env
-INITIAL_ADMIN_PASSWORD = 0000
-```
+初次使用登入驗證完畢後，會將第一個使用者預設為`系統管理員`，後續可自行添加使用者。  
+
+![登入流程](./docs/system-design/01-user-login/登入流程圖.drawio.png)
 
 <br><br>
 

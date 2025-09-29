@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3'
+import { firstUseCheck, checkIfAnUserExists } from '../dal/TLB.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
@@ -10,18 +11,13 @@ import { defineEventHandler, readBody, createError } from 'h3'
  * @returns 
  */
 async function userValidation(username, password) {
-  // eslint-disable-next-line no-undef
-  const config = useRuntimeConfig()
+  await firstUseCheck({ username })
 
-  // TODO: 替換成其他驗證（DB / LDAP / 3rd party)
+  if (!await checkIfAnUserExists({ username })) throw createError({ statusCode: 401, statusMessage: '使用者不存在' })
 
-  if (config.initialAdminPassword !== '') {
-    // TODO: 檢查DB是否已經有Admin等級的使用者，沒有的話用local的做初始化設定
+  // TODO: LDAP / SSO / OAuth2 / SAML / OIDC
 
-    if (username === 'admin' && password === config.initialAdminPassword) return true
-  }
-
-  return false
+  return true
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -42,5 +38,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' })
   }
 
+  // TODO: token
   return { token: 'abcd1234' }
 })
