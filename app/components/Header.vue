@@ -71,6 +71,7 @@ const router = useRouter()
 const user = useUserStore()
 
 const logoutBtn = ref(null)
+let tooltipInstance = null
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Menu
@@ -118,14 +119,23 @@ function handleLogout() {
   router.push('/')
 }
 
+watch(logoutBtn, (el) => {
+  if (el) {
+    // 初始化Tooltip實例
+    tooltipInstance = new $bootstrap.Tooltip(el)
+  } else {
+    // 元素消失時清掉Tooltip實例
+    if (tooltipInstance) {
+      tooltipInstance.hide()
+      tooltipInstance.dispose()
+      tooltipInstance = null
+    }
+  }
+})
+
 onMounted(() => {
   updateClock()
   timer = setInterval(updateClock, 500)
-
-  // 初始化 Bootstrap Tooltip
-  if (logoutBtn.value) {
-    new $bootstrap.Tooltip(logoutBtn.value)
-  }
 })
 
 onUnmounted(() => {

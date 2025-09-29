@@ -4,7 +4,7 @@ import { defineEventHandler, getQuery } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { getUsers } from '../../dal/TLB.js'
+import { getPagedUsers } from '../../dal/TLB.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -18,5 +18,5 @@ export default defineEventHandler(async (event) => {
   const sortField = query.sortField || ''
   const sortDir = query.sortDir || ''
 
-  return await getUsers({ page, size, sortField, sortDir })
+  return await getPagedUsers({ page, size, sortField, sortDir })
 })

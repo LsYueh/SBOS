@@ -1,69 +1,3 @@
-<script setup>
-import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-
-const config = useRuntimeConfig()
-const router = useRouter()
-
-const user = useUserStore()
-
-const username = ref('') // AD 帳號
-const password = ref('')
-const showPassword = ref(false) // 是否顯示密碼
-const errorMsg = ref('')
-
-watch(errorMsg, (val) => {
-  if (val) {
-    setTimeout(() => {
-      errorMsg.value = ''
-    }, 3000)
-  }
-})
-
-/**
- * 簡單驗證 Windows AD 帳號格式
- * @param value 
- */
-function validateADUsername(value) {
-  // 支援 DOMAIN\username 或 username@domain.com
-  const domainBackslash = /^[^\\]+\\[^\\]+$/
-  const domainAt = /^[^@]+@[^@]+\.[^@]+$/
-  return domainBackslash.test(value) || domainAt.test(value)
-}
-
-function togglePassword() {
-  showPassword.value = !showPassword.value
-}
-
-function clearForm() {
-  username.value = ''
-  password.value = ''
-  errorMsg.value = ''
-}
-
-async function submitLogin() {
-  if (!username.value || !password.value) {
-    errorMsg.value = '請填寫 AD 帳號與密碼'
-    return
-  }
-
-  // Note: 看情況使用
-  // if (!validateADUsername(username.value)) {
-  //   errorMsg.value = '請輸入有效的 AD 帳號格式 (DOMAIN\\username 或 username@domain.com)'
-  //   return
-  // }
-
-  try {
-    await user.login(username.value, password.value)
-
-    // 登入成功，導向 Dashboard
-    router.push('/dashboard')
-  } catch (err) {
-    errorMsg.value = err
-  }
-}
-</script>
-
 <template>
   <div class="w-100" style="max-width: 400px;">
     <div class="card shadow-sm p-4" style="width: 380px;">
@@ -126,6 +60,72 @@ async function submitLogin() {
     </p>
   </div>
 </template>
+
+<script setup>
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+
+const config = useRuntimeConfig()
+const router = useRouter()
+
+const user = useUserStore()
+
+const username = ref('') // AD 帳號
+const password = ref('')
+const showPassword = ref(false) // 是否顯示密碼
+const errorMsg = ref('')
+
+watch(errorMsg, (val) => {
+  if (val) {
+    setTimeout(() => {
+      errorMsg.value = ''
+    }, 3000)
+  }
+})
+
+/**
+ * 簡單驗證 Windows AD 帳號格式
+ * @param value 
+ */
+function validateADUsername(value) {
+  // 支援 DOMAIN\username 或 username@domain.com
+  const domainBackslash = /^[^\\]+\\[^\\]+$/
+  const domainAt = /^[^@]+@[^@]+\.[^@]+$/
+  return domainBackslash.test(value) || domainAt.test(value)
+}
+
+function togglePassword() {
+  showPassword.value = !showPassword.value
+}
+
+function clearForm() {
+  username.value = ''
+  password.value = ''
+  errorMsg.value = ''
+}
+
+async function submitLogin() {
+  if (!username.value || !password.value) {
+    errorMsg.value = '請填寫 AD 帳號與密碼'
+    return
+  }
+
+  // Note: 看情況使用
+  // if (!validateADUsername(username.value)) {
+  //   errorMsg.value = '請輸入有效的 AD 帳號格式 (DOMAIN\\username 或 username@domain.com)'
+  //   return
+  // }
+
+  try {
+    await user.login(username.value, password.value)
+
+    // 登入成功，導向 Dashboard
+    router.push('/dashboard')
+  } catch (err) { // H3Error
+    errorMsg.value = err.statusMessage
+  }
+}
+</script>
 
 <style scoped>
 .card {

@@ -57,7 +57,7 @@ export async function firstUseCheck(input) {
   const { username } = input
 
   const total = await howManyUsersAreInTLB()
-  if (total === 0) createFirstUser({ username })
+  if (total === 0) await createFirstUser({ username })
 }
 
 /**
@@ -68,7 +68,7 @@ export async function firstUseCheck(input) {
 export async function checkIfAnUserExists(input) {
   const { username } = input
 
-  const res = await pool.query(`SELECT username FROM sbos.tlb WHERE username=$1`, [username])
+  const res = await pool.query(`SELECT T.username FROM sbos.tlb T WHERE T.username=$1 AND T.deleted_at IS NULL`, [username])
 
   return res.rows[0]?.username === username;
 }
@@ -81,7 +81,7 @@ export async function checkIfAnUserExists(input) {
  * @param {'ASC'|'DESC'} input.sortDir
  * @returns 
  */
-export async function getUsers(input) {
+export async function getPagedUsers(input) {
   const { page, size, sortField, sortDir } = input;
   const offset = (page - 1) * size
 
@@ -95,7 +95,7 @@ export async function getUsers(input) {
   // const safeSortOrder = sortDir === 'DESC' ? 'DESC' : 'ASC'
 
   const res = await pool.query(`
-    SELECT T.*, UR.title as role_title 
+    SELECT T.*, COALESCE(UR.title, '(未知)') as role_title 
     FROM sbos.tlb T 
     LEFT JOIN sbos.user_roles UR ON T.role_id = UR.id 
     ORDER BY T.username asc 
@@ -143,16 +143,16 @@ export async function createUser(input) {
 export async function updateUser(id, input) {
   const {
     modified_by,
-    username, name, comment,
+    username, name, role_id, comment,
   } = input
 
   const query = `
     UPDATE sbos.tlb 
-    SET modified_by = $1, updated_at = now(), username=$2, "name"=$3, "comment"=$4 
-    WHERE id=$5::uuid 
+    SET modified_by = $1, updated_at = now(), username=$2, "name"=$3, role_id=$4, "comment"=$5 
+    WHERE id=$6::uuid 
     RETURNING *
   `;
-  const values = [ modified_by, username, name, comment, id ];
+  const values = [ modified_by, username, name, role_id, comment, id ];
 
   const res = await pool.query(query, values);
   return res.rows[0];
