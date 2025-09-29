@@ -1,6 +1,9 @@
 <template>
   <div class="container py-3">
-    <div class="d-flex justify-content-end mb-3">
+    <div class="d-flex justify-content-end mb-3 gap-2">
+      <button class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="角色管理">
+        <i class="fa-solid fa-users" />
+      </button>
       <button class="btn btn-success" @click="openModal()">
         <i class="fas fa-user-plus me-1" /> 新增使用者
       </button>
@@ -123,13 +126,20 @@ const form = reactive({
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
+ * Helper
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** YYYY/MM/DD HH:mm */
+const datetimeFormatter = (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm')
+
+/**------+---------+---------+---------+---------+---------+---------+----------
  * Tabulator
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** Tabulator */
 const columns = [
   {
-    title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
+    title: '#', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
     formatter: () => {
       return '<i class="fas fa-pen-to-square text-primary" style="cursor:pointer;" />'
     },
@@ -138,19 +148,19 @@ const columns = [
       openModal(TLB)
     }
   },
-  { title: '帳號', field: 'username', widthGrow: 0.5 },
-  { title: '姓名', field: 'name', widthGrow: 0.5 },
-  { title: '說明', field: 'comment' },
-  { title: '建立時間', field: 'created_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
-  { title: '更新時間', field: 'updated_at', widthGrow: 0.5, formatter: (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm'), },
-  { title: '角色', field: 'role_title', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.5, headerSort:false,
+  { title: '帳號'    , field: 'username'  , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
+  { title: '姓名'    , field: 'name'      , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
+  { title: '說明'    , field: 'comment'   , headerHozAlign: 'center', headerSort:false, },
+  { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
+  { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
+  { title: '角色'    , field: 'role_title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
     formatter: (cell) => {
       const role_title = cell.getValue()
       return roles.value.find((role) => role.title === role_title)?.comment ?? '(未知)'
     },
   },
   {
-    title: '狀態', field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
+    title: '狀態'    , field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
     formatter: (cell) => {
       const view = cell.getData()
       const deletedAt = view.deleted_at
@@ -194,6 +204,11 @@ const viewTLB = ref(null)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 onMounted(async () => {
+  // Initialize tooltips
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+
   if (userModalRef.value) {
     userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
   }
