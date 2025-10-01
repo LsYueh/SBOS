@@ -90,10 +90,15 @@ export async function getPagedUsers(input) {
   const total = await howManyUsersAreInTLB()
 
   const res = await pool.query(`
-    SELECT U.*, COALESCE(R.title, '(未知)') as role_title
+    WITH cte_role_counts AS (
+        SELECT 
+            UR.user_id, COUNT(*) AS role_count
+        FROM sbos.user_roles UR
+        GROUP BY user_id
+    )
+    SELECT U.*, RC.role_count
     FROM sbos.users U
-    LEFT JOIN sbos.user_roles UR ON U.id = UR.user_id
-    LEFT JOIN sbos.roles R ON UR.role_id = R.id
+    LEFT JOIN cte_role_counts RC ON U.id = RC.user_id
     ORDER BY U.account asc
     LIMIT $1 OFFSET $2
   `, [size, offset])

@@ -1,9 +1,6 @@
 <template>
   <div class="container py-3">
     <div class="d-flex justify-content-end mb-3 gap-2">
-      <button class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="角色管理">
-        <i class="fa-solid fa-users" />
-      </button>
       <button class="btn btn-success" @click="openModal()">
         <i class="fas fa-user-plus me-1" /> 新增使用者
       </button>
@@ -13,32 +10,26 @@
     <View ref="viewTLB" ajax-url="/api/users" :columns="columns" />
 
     <!-- 使用者表單 Modal -->
-    <div id="userModal" ref="userModalRef" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div ref="userModalRef" class="modal fade" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ form.id ? '編輯使用者' : '新增使用者' }}</h5>
+            <h5 class="modal-title">{{ formUser.id ? '編輯使用者' : '新增使用者' }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" />
           </div>
           <div class="modal-body">
             <form @submit.prevent="saveUser">
               <div class="mb-3">
                 <label class="form-label">帳號</label>
-                <input v-model="form.account" type="text" class="form-control" :disabled="!!form.id" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">角色</label>
-                <select v-model="form.role_title" class="form-select" :disabled="roleIsDisabled" required>
-                  <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.description }}</option>
-                </select>
+                <input v-model="formUser.account" type="text" class="form-control" :disabled="!!formUser.id" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">姓名</label>
-                <input v-model="form.name" type="text" class="form-control" required>
+                <input v-model="formUser.name" type="text" class="form-control" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">說明</label>
-                <input v-model="form.description" type="text" class="form-control">
+                <input v-model="formUser.description" type="text" class="form-control">
               </div>
               <button type="submit" class="btn btn-success me-2">儲存</button>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForm">取消</button>
@@ -107,10 +98,10 @@ const userModalRef = ref(null)
 /** 角色清單 */
 const roles = ref([])
 
-const roleIsDisabled = computed(() => form.account === user.username)
+const roleIsDisabled = computed(() => formUser.account === user.username)
 
 // 表單資料
-const form = reactive({
+const formUser = reactive({
   created_by: '',
   created_at: null,
   modified_by: '',
@@ -121,9 +112,6 @@ const form = reactive({
   account: '',
   name: '',
   description: '',
-
-  role_id: '',
-  role_title: '',
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -154,10 +142,28 @@ const columns = [
   { title: '說明'    , field: 'description', headerHozAlign: 'center', headerSort:false, },
   { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
   { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
-  { title: '角色'    , field: 'role_title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
+  { title: '角色'    , field: 'role_count', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
     formatter: (cell) => {
-      const role_title = cell.getValue()
-      return roles.value.find((role) => role.title === role_title)?.description ?? '(未知)'
+      const view = cell.getData()
+      const roleCount = view.role_count
+      const _roleIsDisabled = (view.account === user.username)
+
+      const opacity = 0.5
+
+      // 不可以自己刪除自己
+      if (_roleIsDisabled) cell.getElement().style.opacity = opacity
+
+      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} ${_roleIsDisabled ? '' : 'text-primary'}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'pointer'};" />`
+    },
+    cellClick: async (e, cell) => {
+      const view = cell.getData()
+      const _roleIsDisabled = (view.account === user.username)
+
+      // 不可以自己編輯自己
+      if (_roleIsDisabled) return 
+
+      // TODO: 開編輯角色視窗
+      confirm('確定要編輯角色嗎？')
     },
   },
   {
@@ -194,7 +200,7 @@ const columns = [
       // cell.getRow().getElement().style.opacity = 0;
 
       await alterUser(view.id, view.deleted_at)
-    }
+    },
   },
 ]
 
@@ -219,7 +225,7 @@ onMounted(async () => {
 
 function openModal(user = null) {
   if (user) {
-    Object.assign(form, user)
+    Object.assign(formUser, user)
   } else {
     resetForm()
   }
@@ -229,16 +235,15 @@ function openModal(user = null) {
 // 儲存（新增/更新）
 async function saveUser() {
   try {
-    form.modified_by = user.username
-    form.role_id = roles.value.find((role) => role.title === form.role_title)?.id
+    formUser.modified_by = user.username
 
-    if (form.id) {
-      const _r = await $fetch(`/api/users/${form.id}`, { method: 'PUT', body: { ...form } })
+    if (formUser.id) {
+      const _r = await $fetch(`/api/users/${formUser.id}`, { method: 'PUT', body: { ...formUser } })
       showToast('使用者更新成功', 'success')
     } else {
-      form.created_by = user.username
+      formUser.created_by = user.username
 
-      const _r = await $fetch('/api/users', { method: 'POST', body: { ...form } })
+      const _r = await $fetch('/api/users', { method: 'POST', body: { ...formUser } })
       showToast('使用者新增成功', 'success')
     }
 
@@ -256,9 +261,9 @@ async function saveUser() {
  */
 async function alterUser(id, deleted_at) {
   try {
-    form.modified_by = user.username
+    formUser.modified_by = user.username
     const statusTo = deleted_at ? 'Y' : 'N'
-    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...form } })
+    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formUser } })
     viewTLB.value.refresh()
   } catch (err) {
     showToast(`變更失敗: ${err}`, 'danger')
@@ -267,19 +272,16 @@ async function alterUser(id, deleted_at) {
 
 // 重設表單
 function resetForm() {
-  form.created_by = ''
-  form.created_at = null
-  form.modified_by = ''
-  form.updated_at = null
-  form.deleted_at = null
+  formUser.created_by = ''
+  formUser.created_at = null
+  formUser.modified_by = ''
+  formUser.updated_at = null
+  formUser.deleted_at = null
 
-  form.id = null
-  form.account = ''
-  form.name = ''
-  form.description = ''
-
-  form.role_id = ''
-  form.role_title = 'user'
+  formUser.id = null
+  formUser.account = ''
+  formUser.name = ''
+  formUser.description = ''
 }
 </script>
 
