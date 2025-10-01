@@ -1,10 +1,10 @@
-import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
+import { defineEventHandler, getRouterParam, createError } from 'h3'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { enableUser, disableUser } from '../../../dal/TLB.js'
+import { deleteUser } from '../../../dal/users.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -12,20 +12,19 @@ import { enableUser, disableUser } from '../../../dal/TLB.js'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
-  const body = await readBody(event)
 
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: '缺少 id' })
+    throw createError({ statusCode: 400, statusMessage: '缺少 ID' })
   }
 
-  if (!body.status) {
-    throw createError({ statusCode: 400, statusMessage: '缺少狀態' })
-  }
-
-  const res = (body.status.toUpperCase() === 'Y') ? await enableUser(id, body) : await disableUser(id, body)
-  if (!res) {
+  const success = await deleteUser(id)
+  if (!success) {
     throw createError({ statusCode: 404, statusMessage: '找不到使用者' })
   }
 
-  return res
+  return {
+    success: true,
+    message: `ID:'${id}' 刪除完畢`,
+    affectedRows: 1,
+  };
 })

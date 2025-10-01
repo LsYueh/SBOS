@@ -1,19 +1,19 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import { firstUseCheck, checkIfAnUserExists } from '../dal/TLB.js'
+import { firstUseCheck, checkIfAnUserExists } from '../dal/users.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * @param {string} username 
+ * @param {string} account 
  * @param {string} password 
  * @returns 
  */
-async function userValidation(username, password) {
-  await firstUseCheck({ username })
+async function userValidation(account, password) {
+  await firstUseCheck({ account })
 
-  if (!await checkIfAnUserExists({ username })) throw createError({ statusCode: 401, statusMessage: '使用者不存在' })
+  if (!await checkIfAnUserExists({ account })) throw createError({ statusCode: 401, statusMessage: '使用者不存在' })
 
   // TODO: LDAP / SSO / OAuth2 / SAML / OIDC
 

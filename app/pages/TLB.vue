@@ -10,7 +10,7 @@
     </div>
 
     <!-- 使用者表格 -->
-    <View ref="viewTLB" ajax-url="/api/TLB" :columns="columns" />
+    <View ref="viewTLB" ajax-url="/api/users" :columns="columns" />
 
     <!-- 使用者表單 Modal -->
     <div id="userModal" ref="userModalRef" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -24,12 +24,12 @@
             <form @submit.prevent="saveUser">
               <div class="mb-3">
                 <label class="form-label">帳號</label>
-                <input v-model="form.username" type="text" class="form-control" :disabled="!!form.id" required>
+                <input v-model="form.account" type="text" class="form-control" :disabled="!!form.id" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">角色</label>
                 <select v-model="form.role_title" class="form-select" :disabled="roleIsDisabled" required>
-                  <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.comment }}</option>
+                  <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.description }}</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -38,7 +38,7 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">說明</label>
-                <input v-model="form.comment" type="text" class="form-control">
+                <input v-model="form.description" type="text" class="form-control">
               </div>
               <button type="submit" class="btn btn-success me-2">儲存</button>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForm">取消</button>
@@ -107,22 +107,23 @@ const userModalRef = ref(null)
 /** 角色清單 */
 const roles = ref([])
 
-const roleIsDisabled = computed(() => form.username === user.username)
+const roleIsDisabled = computed(() => form.account === user.username)
 
 // 表單資料
 const form = reactive({
-  id: null,
-  username: '',
-  name: '',
-  role_id: '',
-  comment: '',
-  role_title: '',
-
   created_by: '',
   created_at: null,
   modified_by: '',
   updated_at: null,
   deleted_at: null,
+
+  id: null,
+  account: '',
+  name: '',
+  description: '',
+
+  role_id: '',
+  role_title: '',
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -148,15 +149,15 @@ const columns = [
       openModal(TLB)
     }
   },
-  { title: '帳號'    , field: 'username'  , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
+  { title: '帳號'    , field: 'account'  , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
   { title: '姓名'    , field: 'name'      , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
-  { title: '說明'    , field: 'comment'   , headerHozAlign: 'center', headerSort:false, },
+  { title: '說明'    , field: 'description', headerHozAlign: 'center', headerSort:false, },
   { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
   { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
   { title: '角色'    , field: 'role_title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
     formatter: (cell) => {
       const role_title = cell.getValue()
-      return roles.value.find((role) => role.title === role_title)?.comment ?? '(未知)'
+      return roles.value.find((role) => role.title === role_title)?.description ?? '(未知)'
     },
   },
   {
@@ -164,7 +165,7 @@ const columns = [
     formatter: (cell) => {
       const view = cell.getData()
       const deletedAt = view.deleted_at
-      const _roleIsDisabled = (view.username === user.username)
+      const _roleIsDisabled = (view.account === user.username)
 
       const opacity = 0.5
 
@@ -180,7 +181,7 @@ const columns = [
     cellClick: async (e, cell) => {
       const view = cell.getData()
       const deletedAt = view.deleted_at
-      const _roleIsDisabled = (view.username === user.username)
+      const _roleIsDisabled = (view.account === user.username)
 
       // 不可以自己刪除自己
       if (_roleIsDisabled) return 
@@ -213,7 +214,7 @@ onMounted(async () => {
     userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
   }
 
-  roles.value = await $fetch('/api/TLB/roles')
+  roles.value = await $fetch('/api/roles')
 })
 
 function openModal(user = null) {
@@ -232,12 +233,12 @@ async function saveUser() {
     form.role_id = roles.value.find((role) => role.title === form.role_title)?.id
 
     if (form.id) {
-      const _r = await $fetch(`/api/TLB/${form.id}`, { method: 'PUT', body: { ...form } })
+      const _r = await $fetch(`/api/users/${form.id}`, { method: 'PUT', body: { ...form } })
       showToast('使用者更新成功', 'success')
     } else {
       form.created_by = user.username
 
-      const _r = await $fetch('/api/TLB', { method: 'POST', body: { ...form } })
+      const _r = await $fetch('/api/users', { method: 'POST', body: { ...form } })
       showToast('使用者新增成功', 'success')
     }
 
@@ -257,7 +258,7 @@ async function alterUser(id, deleted_at) {
   try {
     form.modified_by = user.username
     const statusTo = deleted_at ? 'Y' : 'N'
-    const _r = await $fetch(`/api/TLB/${id}/alter`, { method: 'POST', body: { status: statusTo, ...form } })
+    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...form } })
     viewTLB.value.refresh()
   } catch (err) {
     showToast(`變更失敗: ${err}`, 'danger')
@@ -266,18 +267,19 @@ async function alterUser(id, deleted_at) {
 
 // 重設表單
 function resetForm() {
-  form.id = null
-  form.username = ''
-  form.name = ''
-  form.role_id = ''
-  form.comment = ''
-  form.role_title = 'user'
-
   form.created_by = ''
   form.created_at = null
   form.modified_by = ''
   form.updated_at = null
   form.deleted_at = null
+
+  form.id = null
+  form.account = ''
+  form.name = ''
+  form.description = ''
+
+  form.role_id = ''
+  form.role_title = 'user'
 }
 </script>
 

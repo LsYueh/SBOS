@@ -4,7 +4,7 @@ import { defineEventHandler } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { getRoles } from '../../../dal/user_roles.js'
+import { getRoles } from '../../dal/roles.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
