@@ -5,23 +5,12 @@
  * @param {import('sequelize')} Sequelize
  */
 export async function up(queryInterface, Sequelize) {
-  // 先插入 Users
-  await queryInterface.bulkInsert('Users', [
-    { username: 'Alice', email: 'alice@example.com', createdAt: new Date(), updatedAt: new Date() },
-    { username: 'Bob', email: 'bob@example.com', createdAt: new Date(), updatedAt: new Date() }
+  // 建立預設使用者角色清單
+  const ret = await queryInterface.bulkInsert('user_roles', [
+    { created_by: 'system', modified_by: 'system', title: 'admin', comment: '管理員' },
+    { created_by: 'system', modified_by: 'system', title: 'manager', comment: '主管' },
+    { created_by: 'system', modified_by: 'system', title: 'user', comment: '一般使用者' },
   ], { returning: true })
-
-  // 取得剛剛插入的 Users id
-  const users = await queryInterface.sequelize.query(
-    'SELECT id FROM "Users" WHERE username IN (\'Alice\', \'Bob\');',
-    { type: queryInterface.sequelize.QueryTypes.SELECT }
-  )
-
-  // 再插入 Posts
-  await queryInterface.bulkInsert('Posts', [
-    { title: 'Hello World', content: 'First post', UserId: users[0].id, createdAt: new Date(), updatedAt: new Date() },
-    { title: 'Nuxt + Sequelize', content: 'Second post', UserId: users[1].id, createdAt: new Date(), updatedAt: new Date() }
-  ])
 }
 
 /**
@@ -29,6 +18,5 @@ export async function up(queryInterface, Sequelize) {
  * @param {import('sequelize')} Sequelize
  */
 export async function down(queryInterface, Sequelize) {
-  await queryInterface.bulkDelete('Posts', null, {})
-  await queryInterface.bulkDelete('Users', null, {})
+  await queryInterface.bulkDelete('user_roles', null, {})
 }

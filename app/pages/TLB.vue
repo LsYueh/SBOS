@@ -1,6 +1,9 @@
 <template>
   <div class="container py-3">
-    <div class="d-flex justify-content-end mb-3">
+    <div class="d-flex justify-content-end mb-3 gap-2">
+      <button class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="角色管理">
+        <i class="fa-solid fa-users" />
+      </button>
       <button class="btn btn-success" @click="openModal()">
         <i class="fas fa-user-plus me-1" /> 新增使用者
       </button>
@@ -21,29 +24,21 @@
             <form @submit.prevent="saveUser">
               <div class="mb-3">
                 <label class="form-label">帳號</label>
-                <input v-model="form.username" type="text" class="form-control" required>
+                <input v-model="form.username" type="text" class="form-control" :disabled="!!form.id" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">角色</label>
+                <select v-model="form.role_title" class="form-select" :disabled="roleIsDisabled" required>
+                  <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.comment }}</option>
+                </select>
               </div>
               <div class="mb-3">
                 <label class="form-label">姓名</label>
                 <input v-model="form.name" type="text" class="form-control" required>
               </div>
               <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input v-model="form.email" type="email" class="form-control" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">角色</label>
-                <select v-model="form.role" class="form-select">
-                  <option value="user">使用者</option>
-                  <option value="admin">管理員</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">狀態</label>
-                <select v-model="form.status" class="form-select">
-                  <option value="active">啟用</option>
-                  <option value="inactive">停用</option>
-                </select>
+                <label class="form-label">說明</label>
+                <input v-model="form.comment" type="text" class="form-control">
               </div>
               <button type="submit" class="btn btn-success me-2">儲存</button>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForm">取消</button>
@@ -71,7 +66,9 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import View from '~/components/View.vue'
-const { $bootstrap } = useNuxtApp();
+const { $bootstrap, $dayjs } = useNuxtApp();
+
+const user = useUserStore()
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Page Meta
@@ -107,15 +104,33 @@ const userModalRef = ref(null)
  * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+/** 角色清單 */
+const roles = ref([])
+
+const roleIsDisabled = computed(() => form.username === user.username)
+
 // 表單資料
 const form = reactive({
   id: null,
   username: '',
   name: '',
-  email: '',
-  role: 'user',
-  status: 'active',
+  role_id: '',
+  comment: '',
+  role_title: '',
+
+  created_by: '',
+  created_at: null,
+  modified_by: '',
+  updated_at: null,
+  deleted_at: null,
 })
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Helper
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** YYYY/MM/DD HH:mm */
+const datetimeFormatter = (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm')
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tabulator
@@ -124,32 +139,60 @@ const form = reactive({
 /** Tabulator */
 const columns = [
   {
-    title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
-    formatter: () => {
-      return '<i class="fas fa-trash text-danger" style="cursor:pointer;" />'
-    },
-    cellClick: async (e, cell) => {
-      const TLB = cell.getData()
-      deleteUser(TLB.id)
-    }
-  },
-  { title: 'ID', field: 'id' },
-  { title: '帳號', field: 'username' },
-  { title: '姓名', field: 'name' },
-  { title: 'Email', field: 'email' },
-  { title: '角色', field: 'status', headerSort:false, formatter: (cell) => {
-    const status = cell.getValue();
-    const bg = (status === 'active') ? 'bg-success' : 'bg-secondary'
-    return `<span class="badge ${bg}">${status}</span>`;
-  }},
-  {
-    title: '', hozAlign: 'center', widthGrow: 0.3, headerSort:false,
+    title: '#', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
     formatter: () => {
       return '<i class="fas fa-pen-to-square text-primary" style="cursor:pointer;" />'
     },
     cellClick: async (e, cell) => {
       const TLB = cell.getData()
       openModal(TLB)
+    }
+  },
+  { title: '帳號'    , field: 'username'  , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
+  { title: '姓名'    , field: 'name'      , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
+  { title: '說明'    , field: 'comment'   , headerHozAlign: 'center', headerSort:false, },
+  { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
+  { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
+  { title: '角色'    , field: 'role_title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
+    formatter: (cell) => {
+      const role_title = cell.getValue()
+      return roles.value.find((role) => role.title === role_title)?.comment ?? '(未知)'
+    },
+  },
+  {
+    title: '狀態'    , field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
+    formatter: (cell) => {
+      const view = cell.getData()
+      const deletedAt = view.deleted_at
+      const _roleIsDisabled = (view.username === user.username)
+
+      const opacity = 0.5
+
+      if (deletedAt) {
+        cell.getRow().getElement().style.opacity = opacity
+      } else {
+        // 不可以自己刪除自己
+        if (_roleIsDisabled) cell.getElement().style.opacity = opacity
+      }
+      
+      return `<i class="fas ${deletedAt ? 'fa-eye-slash' : 'fa-eye'}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'pointer'};" />`
+    },
+    cellClick: async (e, cell) => {
+      const view = cell.getData()
+      const deletedAt = view.deleted_at
+      const _roleIsDisabled = (view.username === user.username)
+
+      // 不可以自己刪除自己
+      if (_roleIsDisabled) return 
+
+      // 重新啟用的時候不警告，不然太擾民了
+      if (!deletedAt && !confirm('確定要停用這個使用者嗎？')) return
+
+      // 淡出效果
+      // cell.getRow().getElement().style.transition = "opacity 0.5s";
+      // cell.getRow().getElement().style.opacity = 0;
+
+      await alterUser(view.id, view.deleted_at)
     }
   },
 ]
@@ -160,10 +203,17 @@ const viewTLB = ref(null)
  * Events
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-onMounted(() => {
+onMounted(async () => {
+  // Initialize tooltips
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+
   if (userModalRef.value) {
     userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
   }
+
+  roles.value = await $fetch('/api/TLB/roles')
 })
 
 function openModal(user = null) {
@@ -178,13 +228,19 @@ function openModal(user = null) {
 // 儲存（新增/更新）
 async function saveUser() {
   try {
+    form.modified_by = user.username
+    form.role_id = roles.value.find((role) => role.title === form.role_title)?.id
+
     if (form.id) {
       const _r = await $fetch(`/api/TLB/${form.id}`, { method: 'PUT', body: { ...form } })
       showToast('使用者更新成功', 'success')
     } else {
+      form.created_by = user.username
+
       const _r = await $fetch('/api/TLB', { method: 'POST', body: { ...form } })
       showToast('使用者新增成功', 'success')
     }
+
     resetForm()
     viewTLB.value.refresh()
     userModal.hide()
@@ -193,15 +249,18 @@ async function saveUser() {
   }
 }
 
-// 刪除
-async function deleteUser(id) {
-  if (!confirm('確定要刪除這個使用者嗎？')) return
+/**
+ * @param id 
+ * @param deleted_at 
+ */
+async function alterUser(id, deleted_at) {
   try {
-    const _r = await $fetch(`/api/TLB/${id}`, { method: 'DELETE' })
-    showToast('刪除成功', 'success')
+    form.modified_by = user.username
+    const statusTo = deleted_at ? 'Y' : 'N'
+    const _r = await $fetch(`/api/TLB/${id}/alter`, { method: 'POST', body: { status: statusTo, ...form } })
     viewTLB.value.refresh()
   } catch (err) {
-    showToast(`刪除失敗: ${err}`, 'danger')
+    showToast(`變更失敗: ${err}`, 'danger')
   }
 }
 
@@ -210,9 +269,15 @@ function resetForm() {
   form.id = null
   form.username = ''
   form.name = ''
-  form.email = ''
-  form.role = 'user'
-  form.status = 'active'
+  form.role_id = ''
+  form.comment = ''
+  form.role_title = 'user'
+
+  form.created_by = ''
+  form.created_at = null
+  form.modified_by = ''
+  form.updated_at = null
+  form.deleted_at = null
 }
 </script>
 

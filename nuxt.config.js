@@ -33,7 +33,11 @@ const gitHash = (() => {
  */
 function serverSideConfigFactory() {
   const _config = {
-    initialAdminPassword: process.env.INITIAL_ADMIN_PASSWORD || ''
+    dbHost: process.env.POSTGRES_HOST     || 'localhost',
+    dbPort: process.env.POSTGRES_DB_PORT  ? Number(process.env.DB_PORT) : 5432,
+    dbUser: process.env.POSTGRES_USER     || 'sbos-db-user',
+    dbPass: process.env.POSTGRES_PASSWORD || 'db-passwd',
+    dbName: process.env.POSTGRES_DB       || 'postgres',
   }
 
   return _config

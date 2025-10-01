@@ -3,9 +3,14 @@ import utc from 'dayjs/plugin/utc.js'
 import timezone from 'dayjs/plugin/timezone.js'
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 
-import { compareObjectsByKeys } from './_helper.js'
+import { usePgPool } from '../utils/db.js'
 
-import db from '../utils/db.js'
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** Database Pool */
+const pool = usePgPool()
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Day.js
@@ -23,20 +28,8 @@ dayjs.tz.setDefault('Asia/Taipei')
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * @param {*} MHIO 
- * @param {*} R3 (會故意補一個TDate)
- * @returns 
- */
-function PK01(MHIO, R3) {
-  const keys = [
-    'Year', 'CountryCode',
-  ]
-  return compareObjectsByKeys(MHIO, R3, keys)
-}
-
-/**
  * 日期註記  
- * N: 工作日, Y: 假日(國定假日), V: 非正常假日 , L:假日延長交易
+ * N: 工作日, Y: 假日(國定假日), V: 非正常假日, L:假日延長交易
  * @param {String} dateStr YYYY-MM-DD
  */
 export function setMark(dateStr) {
@@ -55,6 +48,22 @@ export function setMark(dateStr) {
   return 'N'
 }
 
+/**
+ * @param {number} year 
+ */
+function defaultFlagSet(year) {
+  const flagSet = [];
+
+  for (let mm = 1; mm <= 12; mm++) {
+    for (let dd = 1; dd <= 31; dd++) {
+      flagSet.push(setMark(`${year}-${mm}-${dd}`))
+    }
+  }
+
+  // COBOL Styled
+  return flagSet.join('')
+}
+
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Exports
 ---------+---------+---------+---------+---------+---------+---------+--------*/
@@ -64,28 +73,16 @@ export function setMark(dateStr) {
  * @param {String} [countryCode] ISO 3166-1 alpha-3
  * @returns {String}
  */
-export function ReadHLD(year, countryCode = 'TWN') {
-  db.read()
-
+export async function ReadHLD(year, countryCode = 'TWN') {
   // 查詢是否有該年度的資料
-  let HLD = db.data.HLD.find((HLD) => PK01(HLD, { Year: year, CountryCode: countryCode }))
+  const res = await pool.query(
+    `SELECT h.flag_set FROM sbos.hld h WHERE h."year" = $1 AND h.country_code = $2`, 
+    [ year, countryCode ]
+  )
 
-  if (!HLD) {
-    HLD = { Year: year, CountryCode: countryCode, FlagSet: '' };
+  const flagSet = res.rows[0] ?? defaultFlagSet(year)
 
-    const flagSet = [];
-
-    for (let mm = 1; mm <= 12; mm++) {
-      for (let dd = 1; dd <= 31; dd++) {
-        flagSet.push(setMark(`${year}-${mm}-${dd}`))
-      }
-    }
-
-    // COBOL Styled
-    HLD.FlagSet = flagSet.join('')
-  }
-
-  return HLD.FlagSet
+  return flagSet
 }
 
 /**
@@ -93,15 +90,17 @@ export function ReadHLD(year, countryCode = 'TWN') {
  * @param {String} flagSet 
  * @param {String} [countryCode] ISO 3166-1 alpha-3
  */
-export function WriteHLD(year, flagSet, countryCode = 'TWN') {
+export async function WriteHLD(year, flagSet, countryCode = 'TWN') {
   if (flagSet.length !== 372) return 0;
   
-  db.read()
-  const HLD = db.data.HLD.find((HLD) => PK01(HLD, { Year: year, CountryCode: countryCode }))
+  const query = `
+    UPDATE sbos.hld 
+    SET flagSet = $1
+    WHERE year = $2 AND country_code = $3
+    RETURNING *
+  `;
+  const values = [ flagSet, year, countryCode ];
 
-  HLD.FlagSet = flagSet
-
-  db.write()
-
-  return 1;
+  const res = await pool.query(query, values);
+  return res.rows[0];
 }

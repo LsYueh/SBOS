@@ -1,13 +1,17 @@
 /* global defineNuxtRouteMiddleware, navigateTo useUserStore */
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const userStore = useUserStore()
+  const user = useUserStore()
 
-  // 從 cookie 載入 token
-  userStore.loadFromCookie()
+  user.loadFromCookie()
 
   // 排除 login 頁面，其他頁面都要驗證
-  if (!userStore.isLoggedIn && to.path !== '/') {
+  if (!user.isLoggedIn && to.path !== '/') {
     return navigateTo('/')
+  }
+
+  // 已登入後，嘗試存取 login 頁面的行為會轉入 dashboard
+  if (user.isLoggedIn && to.path === '/') {
+    return navigateTo('/dashboard')
   }
 })

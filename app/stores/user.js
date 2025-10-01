@@ -1,4 +1,4 @@
-/* global useCookie */
+import { createError, useCookie } from 'nuxt/app'  
 
 import { defineStore } from 'pinia'
 
@@ -26,20 +26,22 @@ export const useUserStore = defineStore('user', {
         })
         
         this.username = username
-        this.token = res.token
+        this.token    = res.token
+
         this.isLoggedIn = true
 
         // 用 Nuxt useCookie 儲存 username與token
-        const tokenCookie = useCookie('token', { maxAge: 60 * 60 * 24 }) // 1 天
-        tokenCookie.value = res.token
-
-        const usernameCookie = useCookie('username', { maxAge: 60 * 60 * 24 }) // 1 天
-        usernameCookie.value = username
+        const userCookie = useCookie('user', { maxAge: 60 * 60 * 24 }) // 1 天
+        userCookie.value = { username, token: res.token }
 
         return true
       } catch (err) {
         this.logout()
-        throw err
+        
+        throw createError({
+          statusCode: err?.statusCode || 500,
+          statusMessage: err?.data?.statusMessage || '未知錯誤'
+        })
       }
     },
 
@@ -48,23 +50,17 @@ export const useUserStore = defineStore('user', {
       this.username = ''
       this.isLoggedIn = false
 
-      const tokenCookie = useCookie('token')
-      tokenCookie.value = null
-
-      const usernameCookie = useCookie('username')
-      usernameCookie.value = null
+      const userCookie = useCookie('user')
+      userCookie.value = null
     },
 
     loadFromCookie() {
-      const tokenCookie = useCookie('token')
-      if (tokenCookie.value) {
-        this.token = tokenCookie.value
-        this.isLoggedIn = true
-      }
+      const userCookie = useCookie('user')
+      if (userCookie.value) {
+        this.username = userCookie.value.username
+        this.token    = userCookie.value.token
 
-      const usernameCookie = useCookie('username')
-      if (usernameCookie.value) {
-        this.username = usernameCookie.value
+        this.isLoggedIn = true
       }
     }
   }

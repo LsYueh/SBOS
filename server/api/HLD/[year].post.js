@@ -8,6 +8,8 @@ import timezone from 'dayjs/plugin/timezone'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+import { WriteHLD } from '../../dal/HLD'
+
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Day.js
 ---------+---------+---------+---------+---------+---------+---------+--------*/
@@ -46,8 +48,10 @@ export default defineEventHandler(async (event) => {
   const year = toYear(getRouterParam(event, 'year'))
   const body = await readBody(event)
 
-  throw createError({
-    statusCode: 501,
-    statusMessage: "本功能尚未開放"
-  });
+  const countryCode = body.countrycode || 'TWN'
+  const flagSet = body.flagSet
+
+  const HLD = await WriteHLD(year, flagSet, countryCode);
+
+  return HLD
 })

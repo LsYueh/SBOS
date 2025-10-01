@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
 
   const countryCode = query.countrycode || 'TWN'
 
-  const HLD = ReadHLD(year, countryCode);
+  const HLD = await ReadHLD(year, countryCode);
 
   const flags = [];
 
