@@ -31,10 +31,37 @@ export async function getUserRoles(user_id) {
 }
 
 /**
- * @param {object[]} input
+ * @param {object} input
+ * @param {string} input.user_id
+ * @param {object[]} input.roles
  */
 export async function upsertUserRoles(input) {
-  for (const _v of input) {
+  const { user_id, roles } = input
+  
+  const newUserRoles = [];
+
+  for (const _v of roles) {
     const { created_by, modified_by, role_id } = _v;
+
+    newUserRoles.push({
+      created_by, modified_by, user_id, role_id
+    })
   }
+
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    // TODO: Update User Roles
+
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+
+  return newUserRoles.length
 }

@@ -57,7 +57,7 @@
                   <i class="fa-solid fa-users" />
                 </span>
                 <select v-model="formUserRoles.selectedRoleTitle" class="form-select" :disabled="userIsDisabled" required>
-                  <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.description }}</option>
+                  <option v-for="role in rolesFromApi" :key="role.id" :value="role.title">{{ role.description }}</option>
                 </select>
                 <button class="btn btn-success" type="button" @click="addRole">
                   <i class="fa-solid fa-plus" />
@@ -162,8 +162,8 @@ const userRolesModalRef = ref(null)
  * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-/** 角色清單 */
-const roles = ref([])
+/** 角色清單 (from API) */
+const rolesFromApi = ref([])
 
 const userIsDisabled = computed(() => formUser.account === user.username)
 const roleIsDisabled = computed(() => formUserRoles._account === user.username)
@@ -182,9 +182,6 @@ const formUser = reactive({
 })
 
 const formUserRoles = reactive({
-  created_by: '',
-  modified_by: '',
-
   user_id: null,
   roles: [],
 
@@ -292,7 +289,7 @@ onMounted(async () => {
     userRolesModal = new $bootstrap.Modal(userRolesModalRef.value, { backdrop: 'static' })
   }
 
-  roles.value = await $fetch('/api/roles')
+  rolesFromApi.value = await $fetch('/api/roles')
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -392,12 +389,17 @@ async function openUserRolesModal(user = null) {
  * 
  */
 async function upsertUserRoles() {
-  formUserRoles.created_by = user.username
-  formUserRoles.modified_by = user.username
-  
+  if (formUserRoles.roles.length <= 0) {
+    showToast('沒有資料', 'danger')
+    return
+  }
+
+  const id = formUserRoles.user_id
+
   try {
-    await $fetch(`/api/users/${user.id}/roles`, { method: 'POST', body: { ...formUserRoles } })
-    showToast('角色更新成功', 'success')
+    const res = await $fetch(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] })
+    showToast(`角色更新成功 ${res.affectedRows} 筆`, 'success')
+    formUserRoles.roles = await $fetch(`/api/users/${id}/roles`)
   } catch (err) {
     showToast(`角色儲存失敗: ${err}`, 'danger')
   }
@@ -407,9 +409,6 @@ async function upsertUserRoles() {
  * 
  */
 function resetFormUserRoles() {
-  formUserRoles.created_by = ''
-  formUserRoles.modified_by = ''
-
   formUserRoles.user_id = null
   formUserRoles.roles = []
 
@@ -427,15 +426,15 @@ function addRole() {
     return
   }
 
-  const exists = formUserRoles.roles.some((v) => v.role_title === title)
-  if (exists) {
-    showToast('角色已重複', 'danger')
+  const role = rolesFromApi.value.find((v) => v.title === title)
+  if (!role) {
+    showToast(`角色'${title}'不存在於資料庫中`, 'danger')
     return
   }
 
-  const role = roles.value.find((v) => v.title === title)
-  if (!role) {
-    showToast(`角色不存在`, 'danger')
+  const exists = formUserRoles.roles.some((v) => v.role_title === title)
+  if (exists) {
+    showToast('角色已重複', 'danger')
     return
   }
 
