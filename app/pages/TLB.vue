@@ -57,7 +57,6 @@
                   <i class="fa-solid fa-users" />
                 </span>
                 <select v-model="formUserRoles.selectedRoleTitle" class="form-select" :disabled="userIsDisabled" required>
-                  <option value="" selected>(請選擇...)</option>
                   <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.description }}</option>
                 </select>
                 <button class="btn btn-success" type="button" @click="addRole">
@@ -86,7 +85,8 @@
                       <td>{{ role.modified_by }}</td>
                       <td>{{ datetimeFormatter(role.updated_at) }}</td>
                       <td>
-                        <i class="fa-solid fa-trash-can text-danger" style="cursor: pointer;" @click="removeRole(index)" />
+                        <i v-if="!roleIsDisabled" class="fa-solid fa-trash-can text-danger" style="cursor:pointer;" @click="removeRole(index)" />
+                        <i v-else class="fa-solid fa-trash-can" style="cursor:not-allowed; opacity:0.5;" />
                       </td>
                     </tr>
                   </tbody>
@@ -188,7 +188,7 @@ const formUserRoles = reactive({
   user_id: null,
   roles: [],
 
-  selectedRoleTitle: '',
+  selectedRoleTitle: 'user',
   _account: '',
 })
 
@@ -413,7 +413,7 @@ function resetFormUserRoles() {
   formUserRoles.user_id = null
   formUserRoles.roles = []
 
-  formUserRoles.selectedRoleTitle = ''
+  formUserRoles.selectedRoleTitle = 'user'
   formUserRoles._account = ''
 }
 
@@ -433,19 +433,19 @@ function addRole() {
     return
   }
 
-  const role = roles.value.find((v) => v.role_title === title)
+  const role = roles.value.find((v) => v.title === title)
   if (!role) {
     showToast(`角色不存在`, 'danger')
     return
   }
 
   formUserRoles.roles.push({
-    role_id: role.id,
     created_by: user.username,
     created_at: null,
     modified_by: user.username,
     updated_at: null,
 
+    role_id: role.id,
     role_title: title,
     role_description: role.description,
   })

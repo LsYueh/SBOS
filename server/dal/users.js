@@ -120,7 +120,7 @@ export async function getPagedUsers(input) {
  * @param {string} input.account 
  * @param {string} input.name 
  * @param {string} input.description 
- * @param {string} input.role_id 
+ * @param {string} [input.role_id] 
  * @returns 
  */
 export async function createUser(input) {
@@ -142,10 +142,12 @@ export async function createUser(input) {
 
     const user_id = RES_01.rows[0].id
 
-    const RES_02 = await pool.query(
-      `INSERT INTO sbos.user_roles (created_by, modified_by, user_id, role_id) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [ created_by, modified_by, user_id, role_id ]
-    );
+    if (role_id) {
+      const RES_02 = await pool.query(
+        `INSERT INTO sbos.user_roles (created_by, modified_by, user_id, role_id) VALUES ($1, $2, $3, $4) RETURNING *`,
+        [ created_by, modified_by, user_id, role_id ]
+      );
+    }
 
     await client.query('COMMIT')
   } catch (error) {

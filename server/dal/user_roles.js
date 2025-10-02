@@ -29,3 +29,12 @@ export async function getUserRoles(user_id) {
 
   return res.rows ?? []
 }
+
+/**
+ * @param {object[]} input
+ */
+export async function upsertUserRoles(input) {
+  for (const _v of input) {
+    const { created_by, modified_by, role_id } = _v;
+  }
+}
