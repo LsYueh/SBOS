@@ -41,7 +41,7 @@
 
     <!-- Modal : User Roles -->
     <div ref="userRolesModalRef" class="modal fade" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">編輯角色</h5>
@@ -375,14 +375,13 @@ function resetFormUser() {
 /**
  * @param user 
  */
-function openUserRolesModal(user = null) {
+async function openUserRolesModal(user = null) {
   if (!user?.id) alert('缺少使用者資料')
 
   formUserRoles.user_id = user.id 
 
   try {
-    // TODO: Load User Roles (deleteAt = NULL)
-
+    formUserRoles.roles = await $fetch(`/api/users/${user.id}/roles`)
     userRolesModal.show()
   } catch (err) {
     showToast(`角色讀取失敗: ${err}`, 'danger')
@@ -397,8 +396,7 @@ async function upsertUserRoles() {
   formUserRoles.modified_by = user.username
   
   try {
-    // TODO: Update User Roles
-
+    await $fetch(`/api/users/${user.id}/roles`, { method: 'POST', body: { ...formUserRoles } })
     showToast('角色更新成功', 'success')
   } catch (err) {
     showToast(`角色儲存失敗: ${err}`, 'danger')
