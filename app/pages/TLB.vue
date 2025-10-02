@@ -27,12 +27,15 @@
                 <label class="form-label">姓名</label>
                 <input v-model="formUser.name" type="text" class="form-control" required>
               </div>
-              <div class="mb-3">
+              <div class="mb-5">
                 <label class="form-label">說明</label>
-                <input v-model="formUser.description" type="text" class="form-control">
+                <textarea v-model="formUser.description" type="text" class="form-control" rows="3" />
               </div>
-              <button type="submit" class="btn btn-success me-2">儲存</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUser">取消</button>
+
+              <div class="text-end">
+                <button type="submit" class="btn btn-success me-2">儲存</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUser">取消</button>
+              </div>
             </form>
           </div>
         </div>
@@ -53,7 +56,7 @@
                 <span class="input-group-text">
                   <i class="fa-solid fa-users" />
                 </span>
-                <select v-model="formUserRoles.selectedRoleTitle" class="form-select" :disabled="roleIsDisabled" required>
+                <select v-model="formUserRoles.selectedRoleTitle" class="form-select" :disabled="userIsDisabled" required>
                   <option value="" selected>(請選擇...)</option>
                   <option v-for="role in roles" :key="role.id" :value="role.title">{{ role.description }}</option>
                 </select>
@@ -61,7 +64,7 @@
                   <i class="fa-solid fa-plus" />
                 </button>
               </div>
-              <div class="mb-3">
+              <div class="mb-5">
                 <table class="table align-middle">
                   <thead>
                     <tr>
@@ -77,20 +80,23 @@
                   <tbody>
                     <tr v-for="(role, index) in formUserRoles.roles" :key="index">
                       <td>{{ index + 1 }}</td>
-                      <td>{{ role.description }}</td>
+                      <td>{{ role.role_description }}</td>
                       <td>{{ role.created_by }}</td>
-                      <td>{{ role.created_at }}</td>
+                      <td>{{ datetimeFormatter(role.created_at) }}</td>
                       <td>{{ role.modified_by }}</td>
-                      <td>{{ role.updated_at }}</td>
+                      <td>{{ datetimeFormatter(role.updated_at) }}</td>
                       <td>
-                        <button class="btn btn-sm btn-danger" @click="removeRole(index)">刪除</button>
+                        <i class="fa-solid fa-trash-can text-danger" style="cursor: pointer;" @click="removeRole(index)" />
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <button type="submit" class="btn btn-success me-2">儲存</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUserRoles">取消</button>
+
+              <div class="text-end">
+                <button v-if="!roleIsDisabled" type="submit" class="btn btn-success me-2">儲存</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUserRoles">{{ roleIsDisabled ? '離開' : '取消' }}</button>
+              </div>
             </form>
           </div>
         </div>
@@ -159,7 +165,8 @@ const userRolesModalRef = ref(null)
 /** 角色清單 */
 const roles = ref([])
 
-const roleIsDisabled = computed(() => formUser.account === user.username)
+const userIsDisabled = computed(() => formUser.account === user.username)
+const roleIsDisabled = computed(() => formUserRoles._account === user.username)
 
 const formUser = reactive({
   created_by: '',
@@ -182,6 +189,7 @@ const formUserRoles = reactive({
   roles: [],
 
   selectedRoleTitle: '',
+  _account: '',
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -189,7 +197,9 @@ const formUserRoles = reactive({
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** YYYY/MM/DD HH:mm */
-const datetimeFormatter = (cell) => $dayjs(cell.getValue()).format('YYYY/MM/DD HH:mm')
+function datetimeFormatter(v) {
+  return v ? $dayjs(v).format('YYYY/MM/DD HH:mm') : '----/--/-- --:--:--'
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tabulator
@@ -210,28 +220,17 @@ const columns = [
   { title: '帳號'    , field: 'account'  , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
   { title: '姓名'    , field: 'name'      , headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5 },
   { title: '說明'    , field: 'description', headerHozAlign: 'center', headerSort:false, },
-  { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
-  { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: datetimeFormatter, },
+  { title: '建立時間', field: 'created_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+  { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
   { title: '角色'    , field: 'role_count', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
     formatter: (cell) => {
       const view = cell.getData()
       const roleCount = view.role_count
-      const _roleIsDisabled = (view.account === user.username)
 
-      const opacity = 0.5
-
-      // 不可以自己刪除自己
-      if (_roleIsDisabled) cell.getElement().style.opacity = opacity
-
-      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} ${_roleIsDisabled ? '' : 'text-primary'}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'pointer'};" />`
+      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:pointer;" />`
     },
     cellClick: async (e, cell) => {
       const view = cell.getData()
-      const _roleIsDisabled = (view.account === user.username)
-
-      // 不可以自己編輯自己
-      if (_roleIsDisabled) return 
-
       openUserRolesModal(view)
     },
   },
@@ -379,6 +378,7 @@ async function openUserRolesModal(user = null) {
   if (!user?.id) alert('缺少使用者資料')
 
   formUserRoles.user_id = user.id 
+  formUserRoles._account = user.account
 
   try {
     formUserRoles.roles = await $fetch(`/api/users/${user.id}/roles`)
@@ -414,6 +414,7 @@ function resetFormUserRoles() {
   formUserRoles.roles = []
 
   formUserRoles.selectedRoleTitle = ''
+  formUserRoles._account = ''
 }
 
 /**
@@ -426,13 +427,13 @@ function addRole() {
     return
   }
 
-  const exists = formUserRoles.roles.some(role => role.title === title)
+  const exists = formUserRoles.roles.some((v) => v.role_title === title)
   if (exists) {
     showToast('角色已重複', 'danger')
     return
   }
 
-  const role = roles.value.find((role) => role.title === title)
+  const role = roles.value.find((v) => v.role_title === title)
   if (!role) {
     showToast(`角色不存在`, 'danger')
     return
@@ -440,11 +441,13 @@ function addRole() {
 
   formUserRoles.roles.push({
     role_id: role.id,
-    description: role.description,
     created_by: user.username,
-    created_at: '----/--/-- --:--:--',
+    created_at: null,
     modified_by: user.username,
-    updated_at: '----/--/-- --:--:--',
+    updated_at: null,
+
+    role_title: title,
+    role_description: role.description,
   })
 }
 
