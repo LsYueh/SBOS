@@ -28,6 +28,7 @@ export default defineEventHandler(() => {
       title: '管理',
       items: [
         { label: '使用者設定 (TLB)', to: '/TLB', roles: ['admin'] },
+        { label: '權限清單 (PRSB)', to: '/prsb', roles: ['admin'] },
         { label: '假日設定 (HLD)', to: '/HLD', roles: ['admin'] },
       ]
     },
