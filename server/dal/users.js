@@ -37,13 +37,13 @@ async function createFirstUser(input) {
 
   const role_id = await getAdminRoleID()
 
-  await createUser({
+  const user_id = await createUser({
     created_by: 'system', modified_by: 'system',
     account, name: 'admin', description: 'The first user of SBOS.',
     role_id
   });
 
-  return
+  return user_id
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -120,7 +120,7 @@ export async function getPagedUsers(input) {
  * @param {string} input.account 
  * @param {string} input.name 
  * @param {string} input.description 
- * @param {string} [input.role_id] 
+ * @param {string} [input.role_id] Default user role
  * @returns 
  */
 export async function createUser(input) {
@@ -132,6 +132,9 @@ export async function createUser(input) {
 
   const client = await pool.connect()
 
+  /** @type {string?} User ID (UUIDv1) */
+  let user_id = null
+
   try {
     await client.query('BEGIN')
 
@@ -140,7 +143,7 @@ export async function createUser(input) {
       [ created_by, modified_by, account, name, description ]
     );
 
-    const user_id = RES_01.rows[0].id
+    user_id = RES_01.rows[0].id
 
     if (role_id) {
       const RES_02 = await pool.query(
@@ -157,7 +160,7 @@ export async function createUser(input) {
     client.release()
   }
 
-  return
+  return user_id
 }
 
 /**

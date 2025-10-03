@@ -53,6 +53,8 @@ export async function upsertUserRoles(input) {
   try {
     await client.query('BEGIN')
 
+    const res = await pool.query(`SELECT UR.role_id FROM sbos.user_roles UR WHERE user_id=$1::uuid`, [ user_id ]);
+
     // TODO: Update User Roles
 
     await client.query('COMMIT')
