@@ -4,7 +4,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { createUser } from '../../dal/TLB.js'
+import { createUser } from '../../dal/users.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -13,8 +13,8 @@ import { createUser } from '../../dal/TLB.js'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  if (!body.username || !body.name) {
-    throw createError({ statusCode: 400, statusMessage: 'username 與 name 必填' })
+  if (!body.account || !body.name) {
+    throw createError({ statusCode: 400, statusMessage: 'account 與 name 必填' })
   }
 
   return await createUser(body)

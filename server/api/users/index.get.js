@@ -4,7 +4,7 @@ import { defineEventHandler, getQuery } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { getPagedUsers } from '../../dal/TLB.js'
+import { getPagedUsers } from '../../dal/users.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler

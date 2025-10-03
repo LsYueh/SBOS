@@ -24,7 +24,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/.bin/tap",
       "args": [
-          "orm/utils.test.js",
+          "server/dal/user_roles.test.js",
           "--allow-empty-coverage", "--disable-coverage",
           "-t", "0"
       ],

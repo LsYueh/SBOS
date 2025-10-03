@@ -6,10 +6,10 @@
  */
 export async function up(queryInterface, Sequelize) {
   // 建立預設使用者角色清單
-  const ret = await queryInterface.bulkInsert('user_roles', [
-    { created_by: 'system', modified_by: 'system', title: 'admin', comment: '管理員' },
-    { created_by: 'system', modified_by: 'system', title: 'manager', comment: '主管' },
-    { created_by: 'system', modified_by: 'system', title: 'user', comment: '一般使用者' },
+  const ret = await queryInterface.bulkInsert('roles', [
+    { created_by: 'system', modified_by: 'system', title: 'admin', description: '管理員' },
+    { created_by: 'system', modified_by: 'system', title: 'manager', description: '主管' },
+    { created_by: 'system', modified_by: 'system', title: 'user', description: '一般使用者' },
   ], { returning: true })
 }
 
@@ -18,5 +18,5 @@ export async function up(queryInterface, Sequelize) {
  * @param {import('sequelize')} Sequelize
  */
 export async function down(queryInterface, Sequelize) {
-  await queryInterface.bulkDelete('user_roles', null, {})
+  await queryInterface.bulkDelete('roles', null, {})
 }
