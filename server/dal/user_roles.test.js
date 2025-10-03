@@ -44,7 +44,7 @@ after(async () => {
     await u.deleteUser(user_id)
   }
 
-  await pool.end()
+  // await pool.end()
 });
 
 /**------+---------+---------+---------+---------+---------+---------+----------

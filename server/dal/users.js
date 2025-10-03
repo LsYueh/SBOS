@@ -94,6 +94,7 @@ export async function getPagedUsers(input) {
         SELECT 
             UR.user_id, COUNT(*) AS role_count
         FROM sbos.user_roles UR
+        WHERE UR.deleted_at IS NULL
         GROUP BY user_id
     )
     SELECT U.*, RC.role_count

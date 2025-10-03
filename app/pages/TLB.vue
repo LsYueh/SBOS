@@ -95,7 +95,7 @@
 
               <div class="text-end">
                 <button v-if="!roleIsDisabled" type="submit" class="btn btn-success me-2">儲存</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUserRoles">{{ roleIsDisabled ? '離開' : '取消' }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFormUserRoles">離開</button>
               </div>
             </form>
           </div>
@@ -389,17 +389,13 @@ async function openUserRolesModal(user = null) {
  * 
  */
 async function upsertUserRoles() {
-  if (formUserRoles.roles.length <= 0) {
-    showToast('沒有資料', 'danger')
-    return
-  }
-
   const id = formUserRoles.user_id
 
   try {
     const res = await $fetch(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] })
     showToast(`角色更新成功 ${res.affectedRows} 筆`, 'success')
     formUserRoles.roles = await $fetch(`/api/users/${id}/roles`)
+    viewUsers.value.refresh()
   } catch (err) {
     showToast(`角色儲存失敗: ${err}`, 'danger')
   }
