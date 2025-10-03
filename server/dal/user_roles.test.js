@@ -40,6 +40,7 @@ before(async () => {
 
 after(async () => {
   if (user_id) {
+    await pool.query(`DELETE FROM sbos.user_roles WHERE user_id=$1::uuid`, [user_id]);
     await u.deleteUser(user_id)
   }
 
@@ -53,6 +54,4 @@ after(async () => {
 test('User Roles CRUD Test', async (t) => {
   const affectedRow = await ur.upsertUserRoles({ user_id, roles })
   t.equal(affectedRow, roles.length)
-
-  // TODO: 刪掉Roles
 })

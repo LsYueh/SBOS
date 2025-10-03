@@ -50,12 +50,19 @@ export async function upsertUserRoles(input) {
 
   const client = await pool.connect()
 
+  let affectedRow = 0
+
   try {
     await client.query('BEGIN')
 
+    // 檢查目前使用者的角色
     const res = await pool.query(`SELECT UR.role_id FROM sbos.user_roles UR WHERE user_id=$1::uuid`, [ user_id ]);
 
-    // TODO: Update User Roles
+    // TODO: 更新刪除註記
+
+    // TODO: 新增角色
+
+    // TODO: 再讀一次來更新affectedRow
 
     await client.query('COMMIT')
   } catch (error) {
@@ -65,5 +72,5 @@ export async function upsertUserRoles(input) {
     client.release()
   }
 
-  return newUserRoles.length
+  return affectedRow
 }
