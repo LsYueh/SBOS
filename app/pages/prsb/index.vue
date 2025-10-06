@@ -5,7 +5,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { reactive, ref, onMounted  } from 'vue'
+import View from '~/components/View.vue'
 const { $bootstrap } = useNuxtApp();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -13,7 +14,7 @@ const { $bootstrap } = useNuxtApp();
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 definePageMeta({
-  headerTitle: '權限清單 (PRSB)'
+  headerTitle: '權限管理 (PRSB)'
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
