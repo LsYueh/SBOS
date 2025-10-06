@@ -149,6 +149,20 @@ const showToast = (msg, type = 'primary') => {
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
+ * Tooltips
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * Initialize tooltips
+ */
+function initBs5Tooltips() {
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+
+  return tooltipList
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
  * Modal
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
@@ -276,10 +290,7 @@ const viewUsers = ref(null)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 onMounted(async () => {
-  // Initialize tooltips
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+  initBs5Tooltips()
 
   if (userModalRef.value) {
     userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
