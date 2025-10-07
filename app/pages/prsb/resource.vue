@@ -92,14 +92,20 @@
             </div>
           </div>
         </div>
-
       </form>
+
+      <div class="input-group mb-2">
+        <span class="input-group-text">資源</span>
+        <div class="input-group-text p-0 flex-grow-1">
+          <Table class="w-100" :data="tableData" :columns="tableColumns" :options="tableOptions" @row-click="handleRowClick"/>
+        </div>
+      </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted  } from 'vue'
-import View from '~/components/View.vue'
+import Table from '~/components/Table.vue'
 const { $bootstrap } = useNuxtApp();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -131,6 +137,23 @@ const formResource = reactive({
   action: '',
 })
 
+const tableData = ref([
+  { key: 'KEY_0001_PAGE', description: '', resource: '/page1/aaa', action: 'READ' },
+  { key: 'KEY_0002_PAGE', description: null, resource: '/page1/bbb', action: 'READ, WRITE' },
+  { key: 'KEY_0003_PAGE', description: '', resource: '/report/fin', action: 'PRINT' }
+])
+
+const tableColumns = [
+  { title: 'KEY', field: 'key', widthGrow: 0.5 },
+  { title: 'URL', field: 'resource' },
+  { title: '權限', field: 'action', hozAlign: 'right', }
+]
+
+const tableOptions = {
+  pagination: true,
+  paginationSize: 5
+}
+
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tooltips
 ---------+---------+---------+---------+---------+---------+---------+--------*/
@@ -154,7 +177,7 @@ onMounted(async () => {
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events
+ * Events - Input/Edit
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
@@ -162,6 +185,14 @@ onMounted(async () => {
  */
 function addResource() {
   
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events - Table
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+const handleRowClick = (rowData) => {
+  alert(`你點擊了 ${rowData.key} 這一行`)
 }
 
 </script>
