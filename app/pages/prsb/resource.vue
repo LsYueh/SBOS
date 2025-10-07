@@ -11,7 +11,7 @@
             <div class="input-group">
               <span class="input-group-text">URL</span>
               <input v-model="formResource.resource" type="text" class="form-control" placeholder='ex: "/admin/dashboard"' required>
-              <button type="button" class="btn btn-secondary" title="檢查" data-bs-toggle="tooltip"><i class="fa-solid fa-clipboard-check"/></button>
+              <button type="button" class="btn btn-secondary" title="檢查" data-bs-toggle="tooltip" @click="checkResource"><i class="fa-solid fa-clipboard-check"/></button>
             </div>
           </div>
 
@@ -82,13 +82,13 @@
 
           <div class="col-auto">
             <div class="d-grid mx-auto h-100">
-              <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" ><i class="fa-solid fa-arrow-rotate-left"/></button>
+              <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormResource"><i class="fa-solid fa-arrow-rotate-left"/></button>
             </div>
           </div>
 
           <div class="col-auto">
             <div class="d-grid mx-auto h-100">
-              <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip" ><i class="fa-solid fa-square-check"/></button>
+              <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip" @click="saveResource"><i class="fa-solid fa-square-check"/></button>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@
       <div class="input-group mb-2">
         <span class="input-group-text">資源</span>
         <div class="input-group-text p-0 flex-grow-1">
-          <Table class="w-100" :data="tableData" :columns="tableColumns" :options="tableOptions" @row-click="handleRowClick"/>
+          <Table ref="tableRef" class="w-100" :columns="tableColumns" :options="tableOptions" @ready="onTableReady" @row-click="handleRowClick"/>
         </div>
       </div>
   </div>
@@ -117,7 +117,7 @@ definePageMeta({
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * 
+ * Variables
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
@@ -137,11 +137,12 @@ const formResource = reactive({
   action: '',
 })
 
-const tableData = ref([
-  { key: 'KEY_0001_PAGE', description: '', resource: '/page1/aaa', action: 'READ' },
-  { key: 'KEY_0002_PAGE', description: null, resource: '/page1/bbb', action: 'READ, WRITE' },
-  { key: 'KEY_0003_PAGE', description: '', resource: '/report/fin', action: 'PRINT' }
-])
+const tableRef = ref(null)
+
+const tableOptions = {
+  pagination: true,
+  paginationSize: 5
+}
 
 const tableColumns = [
   { title: 'KEY', field: 'key', widthGrow: 0.5 },
@@ -149,10 +150,6 @@ const tableColumns = [
   { title: '權限', field: 'action', hozAlign: 'right', }
 ]
 
-const tableOptions = {
-  pagination: true,
-  paginationSize: 5
-}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tooltips
@@ -177,22 +174,79 @@ onMounted(async () => {
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events - Input/Edit
+ * Events - Resource Input/Edit
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
  * 
  */
-function addResource() {
-  
+function resetFormResource() {
+  formResource.created_by =  ''
+  formResource.created_at =  null
+  formResource.modified_by =  ''
+  formResource.updated_at =  null
+  formResource.deleted_at =  null
+
+  formResource.id =  null
+  formResource.key =  ''
+  formResource.description =  ''
+  formResource.resource =  ''
+  formResource.action =  ''
 }
+
+/**
+ * @returns 
+ */
+async function loadResources() {
+  // TODO: ...
+
+  return [
+    { key: 'KEY_0001_PAGE', description: '', resource: '/page1/aaa', action: 'READ' },
+    { key: 'KEY_0002_PAGE', description: null, resource: '/page1/bbb', action: 'READ, WRITE' },
+    { key: 'KEY_0003_PAGE', description: '', resource: '/report/fin', action: 'PRINT' }
+  ]
+}
+
+/**
+ * 
+ */
+async function checkResource() {
+  // TODO: ...
+}
+
+/**
+ * 
+ */
+async function addResource() {
+  // TODO: ...
+}
+
+/**
+ * 
+ */
+async function saveResource() {
+  // TODO: ...
+}
+
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events - Table
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-const handleRowClick = (rowData) => {
-  alert(`你點擊了 ${rowData.key} 這一行`)
+/**
+ * 
+ */
+async function onTableReady() {
+  const _data = await loadResources()
+  tableRef.value.setData(_data)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handleRowClick(rowData) {
+  if (rowData) Object.assign(formResource, rowData)
 }
 
 </script>

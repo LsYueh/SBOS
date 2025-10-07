@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, defineExpose, defineEmits } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 
@@ -13,9 +13,11 @@ const props = defineProps({
   options: { type: Object, default: () => ({}) }
 })
 
-const emit = defineEmits(['row-click'])
+const emit = defineEmits(['row-click', 'ready'])
 
 const tableRef = ref(null)
+
+/** @type {Tabulator} */
 let tableInstance = null
 
 onMounted(() => {
@@ -32,6 +34,10 @@ onMounted(() => {
     const rowData = row.getData()
     emit('row-click', rowData)
   });
+
+  tableInstance.on("tableBuilt", function() {
+    emit('ready')
+  }); 
 })
 
 watch(() => props.data,
@@ -41,6 +47,13 @@ watch(() => props.data,
   { deep: true }
 )
 
+/**
+ * @param newData 
+ */
+function setData(data = []) {
+  if (tableInstance) tableInstance.replaceData(data)
+}
+
 onBeforeUnmount(() => {
   if (tableInstance) {
     tableInstance.destroy()
@@ -48,7 +61,7 @@ onBeforeUnmount(() => {
   }
 })
 
-defineExpose({ tableInstance })
+defineExpose({ setData })
 </script>
 
 <style scoped>
