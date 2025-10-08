@@ -33,44 +33,14 @@
               <table class="table table-sm text-center mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th>查詢</th>
-                    <th>新增</th>
-                    <th>修改</th>
-                    <th>刪除</th>
-                    <th>下載</th>
-                    <th>製表</th>
+                    <th v-for="(item, index) in options" :key="index">{{ item }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>
+                    <td v-for="(item, index) in options" :key="index">
                       <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center">
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                        <div class="form-check form-switch"><input v-model="checked[index]" class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
                       </div>
                     </td>
                   </tr>                
@@ -119,7 +89,7 @@
 <script setup>
 import { reactive, ref, onMounted  } from 'vue';
 import Table from '~/components/Table.vue';
-const { $bootstrap } = useNuxtApp();
+const { $bootstrap, $dayjs } = useNuxtApp();
 
 const user = useUserStore();
 
@@ -162,10 +132,35 @@ const tableOptions = {
 const tableColumns = [
   { title: 'KEY', field: 'key', widthGrow: 0.5 },
   { title: 'URL', field: 'resource' },
-  { title: '權限', field: 'action', hozAlign: 'right', }
+  { title: '建立時間', field: 'created_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+  { title: '更新時間', field: 'updated_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+  { title: '權限', field: 'action', hozAlign: 'right',
+    formatter: (cell) => {
+      const action = cell.getValue();
+      return action
+  }, }
 ];
 
 let timer = null;
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Variables : Permissions
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** Permission option */
+const options = ['查詢', '新增', '修改', '刪除', '下載', '製表'];
+const checked = ref(Array(options.length).fill(false))
+
+/**
+ * BitSet
+ */
+const bitValue = computed(() => {
+  // 計算 BitSet 整數
+  return checked.value.reduce((acc, val, idx) => {
+    if (val) acc |= (1 << idx)
+    return acc
+  }, 0)
+})
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Toast
@@ -199,6 +194,11 @@ function initBs5Tooltips() {
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** YYYY/MM/DD HH:mm */
+function datetimeFormatter(v) {
+  return v ? $dayjs(v).format('YYYY/MM/DD HH:mm') : '----/--/-- --:--:--'
+}
 
 /**
  * (Factory function)
@@ -281,10 +281,9 @@ async function checkResource() {
  * 
  */
 async function upsertResource() {
-  // TODO: Action...
-
   try {
     formResource.modified_by = user.username;
+    formResource.action = bitValue;
 
     if (formResource.id) {
       const _r = await $fetch(`/api/permissions/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
@@ -302,7 +301,6 @@ async function upsertResource() {
     showToast(`異動失敗: ${error}`, 'danger')
   }
 }
-
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events : Table
@@ -328,7 +326,12 @@ async function onTableReady() {
  * @param rowData 
  */
 function handleRowClick(rowData) {
-  if (rowData) Object.assign(formResource, rowData)
+  if (rowData) {
+    Object.assign(formResource, rowData);
+
+    // 還原 checkbox 狀態
+    checked.value = checked.value.map((_, idx) => !!(formResource.action & (1 << idx)))
+  }
 }
 
 </script>
