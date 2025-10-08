@@ -1,17 +1,17 @@
-import BitSet from 'bitset'
-import { usePgPool } from '../utils/db.js'
+import BitSet from 'bitset';
+import { usePgPool } from '../utils/db.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** Database Pool */
-const pool = usePgPool()
+const pool = usePgPool();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
-/
+
 /**
  * BitSet to Actions
  * @param {BitSet} bitSet 
@@ -38,9 +38,23 @@ function atob(action) {
 
 /**
  * @param {object} input 
+ * @param {string} input.created_by 
  * @returns 
  */
 export async function create(input) {
+  const {
+    created_by, modified_by,
+    key, description, resource, action
+  } = input;
+
+  const res = await pool.query(
+    `INSERT INTO sbos.permissions (created_by, modified_by, key, description, resource, action) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+    [ created_by, modified_by, key, description, resource, action ]
+  );
+
+  const permissions_id = res.rows[0].id;
+
+  return permissions_id
 }
 
 /**

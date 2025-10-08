@@ -1,112 +1,127 @@
 <template>
   <div class="container py-3">
-      <form @submit.prevent="addResource">
-        <div class="row gx-3 mb-3">
-          <!-- 左側：KEY + 資源 -->
-          <div class="col">
-            <div class="input-group mb-2">
-              <span class="input-group-text">KEY</span>
-              <input v-model="formResource.key" type="text" class="form-control" readonly disabled>
-            </div>
-            <div class="input-group">
-              <span class="input-group-text">URL</span>
-              <input v-model="formResource.resource" type="text" class="form-control" placeholder='ex: "/admin/dashboard"' required>
-              <button type="button" class="btn btn-secondary" title="檢查" data-bs-toggle="tooltip" @click="checkResource"><i class="fa-solid fa-clipboard-check"/></button>
-            </div>
+    <form @submit.prevent="upsertResource">
+      <div class="row gx-3 mb-3">
+        <!-- 左側：KEY + 資源 -->
+        <div class="col">
+          <div class="input-group mb-2">
+            <span class="input-group-text">KEY</span>
+            <input v-model="formResource.key" type="text" class="form-control" readonly disabled>
           </div>
-
-          <!-- 右側：說明 -->
-          <div class="col d-flex">
-            <div class="input-group">
-              <span class="input-group-text">說明</span>
-              <textarea v-model="formResource.description" class="form-control" placeholder="輸入說明..." />
-            </div>
+          <div class="input-group">
+            <span class="input-group-text">URL</span>
+            <input v-model="formResource.resource" type="text" class="form-control" placeholder='ex: "/admin/dashboard"' required @keyup="onResourceKeyup">
+            <button type="button" class="btn btn-secondary" title="檢查" data-bs-toggle="tooltip" @click="checkResource"><i class="fa-solid fa-clipboard-check"/></button>
           </div>
         </div>
 
-        <!-- 權限 -->
-        <div class="row gx-2 mb-3">
-          <div class="col">
-            <div class="input-group">
-              <span class="input-group-text">權限</span>
-              <div class="input-group-text p-0 flex-grow-1">
-                <table class="table table-sm text-center mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th>查詢</th>
-                      <th>新增</th>
-                      <th>修改</th>
-                      <th>刪除</th>
-                      <th>下載</th>
-                      <th>製表</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex justify-content-center">
-                          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
-                        </div>
-                      </td>
-                    </tr>                
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        <!-- 右側：說明 -->
+        <div class="col d-flex">
+          <div class="input-group">
+            <span class="input-group-text">說明</span>
+            <textarea v-model="formResource.description" class="form-control" placeholder="輸入說明..." />
           </div>
-
-          <div class="col-auto">
-            <div class="d-grid mx-auto h-100">
-              <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormResource"><i class="fa-solid fa-arrow-rotate-left"/></button>
-            </div>
-          </div>
-
-          <div class="col-auto">
-            <div class="d-grid mx-auto h-100">
-              <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip" @click="saveResource"><i class="fa-solid fa-square-check"/></button>
-            </div>
-          </div>
-        </div>
-      </form>
-
-      <div class="input-group mb-2">
-        <span class="input-group-text">資源</span>
-        <div class="input-group-text p-0 flex-grow-1">
-          <Table ref="tableRef" class="w-100" :columns="tableColumns" :options="tableOptions" @ready="onTableReady" @row-click="handleRowClick"/>
         </div>
       </div>
+
+      <!-- 權限 -->
+      <div class="row gx-2 mb-3">
+        <div class="col">
+          <div class="input-group">
+            <span class="input-group-text">權限</span>
+            <div class="input-group-text p-0 flex-grow-1">
+              <table class="table table-sm text-center mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>查詢</th>
+                    <th>新增</th>
+                    <th>修改</th>
+                    <th>刪除</th>
+                    <th>下載</th>
+                    <th>製表</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                  </tr>                
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <div class="d-grid mx-auto h-100">
+            <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormResource"><i class="fa-solid fa-arrow-rotate-left"/></button>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <div class="d-grid mx-auto h-100">
+            <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip"><i class="fa-solid fa-square-check"/></button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="input-group mb-2">
+      <span class="input-group-text">資源</span>
+      <div class="input-group-text p-0 flex-grow-1">
+        <Table ref="tableRef" class="w-100" :columns="tableColumns" :options="tableOptions" @ready="onTableReady" @row-click="handleRowClick"/>
+      </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+      <div ref="toastRef" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="2000">
+        <div class="d-flex">
+          <div class="toast-body">
+            {{ toastMessage }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" />
+        </div>
+      </div>
+    </div>
   </div>
+
 </template>
 
 <script setup>
-import { reactive, ref, onMounted  } from 'vue'
-import Table from '~/components/Table.vue'
+import { reactive, ref, onMounted  } from 'vue';
+import Table from '~/components/Table.vue';
 const { $bootstrap } = useNuxtApp();
+
+const user = useUserStore();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Page Meta
@@ -114,7 +129,7 @@ const { $bootstrap } = useNuxtApp();
 
 definePageMeta({
   headerTitle: '權限資源設定'
-})
+});
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Variables
@@ -124,32 +139,48 @@ definePageMeta({
  * 
  */
 const formResource = reactive({
-  created_by: '',
-  created_at: null,
+  created_by : '',
+  created_at : null,
   modified_by: '',
-  updated_at: null,
-  deleted_at: null,
+  updated_at : null,
+  deleted_at : null,
 
   id: null,
   key: '',
   description: '',
   resource: '',
   action: '',
-})
+});
 
-const tableRef = ref(null)
+const tableRef = ref(null);
 
 const tableOptions = {
   pagination: true,
   paginationSize: 5
-}
+};
 
 const tableColumns = [
   { title: 'KEY', field: 'key', widthGrow: 0.5 },
   { title: 'URL', field: 'resource' },
   { title: '權限', field: 'action', hozAlign: 'right', }
-]
+];
 
+let timer = null;
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Toast
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+const toastRef = ref(null);
+let toastInstance = null;
+const toastMessage = ref('');
+
+const showToast = (msg, type = 'primary') => {
+  toastMessage.value = msg;
+  toastRef.value.className = `toast align-items-center text-bg-${type} border-0`;
+  toastInstance = toastInstance || new $bootstrap.Toast(toastRef.value, { delay: 2000 });
+  toastInstance.show();
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tooltips
@@ -159,11 +190,36 @@ const tableColumns = [
  * Initialize tooltips
  */
 function initBs5Tooltips() {
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl));
 
-  return tooltipList
+  return tooltipList;
 }
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Helper
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * (Factory function)
+ * @param param
+ */
+function createUrlTagger({ prefix = 'PAGE', suffix = 'VIEW', ignore = ['ADMIN', 'USER', 'APP', 'API'] } = {}) {
+  return function(url) {
+    if (!url) return `${prefix}_HOME_${suffix}`;
+
+    url = url.split(/[?#]/)[0];
+    const parts = url.split('/').filter(Boolean).map(p => p.trim().toUpperCase());
+
+    while (parts.length && ignore.includes(parts[0])) parts.shift();
+
+    const tagBody = parts.length ? parts.join('_') : 'HOME';
+
+    return `${prefix}_${tagBody}_${suffix}`;
+  };
+}
+
+const $TAG = createUrlTagger();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events
@@ -174,37 +230,44 @@ onMounted(async () => {
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events - Resource Input/Edit
+ * Events : Resource Input/Edit
 ---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * 
+ * @param event 
+ */
+function onResourceKeyup(event) {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    formResource.key = formResource.resource ? $TAG(formResource.resource) : ''
+  }, 500); // 500ms 延遲
+}
 
 /**
  * 
  */
 function resetFormResource() {
-  formResource.created_by =  ''
-  formResource.created_at =  null
-  formResource.modified_by =  ''
-  formResource.updated_at =  null
-  formResource.deleted_at =  null
+  formResource.created_by  = ''
+  formResource.created_at  = null
+  formResource.modified_by = ''
+  formResource.updated_at  = null
+  formResource.deleted_at  = null
 
-  formResource.id =  null
-  formResource.key =  ''
-  formResource.description =  ''
-  formResource.resource =  ''
-  formResource.action =  ''
+  formResource.id = null
+  formResource.key = ''
+  formResource.description = ''
+  formResource.resource = ''
+  formResource.action = ''
 }
 
 /**
  * @returns 
  */
 async function loadResources() {
-  // TODO: ...
+  const data = await $fetch('/api/permissions');
 
-  return [
-    { key: 'KEY_0001_PAGE', description: '', resource: '/page1/aaa', action: 'READ' },
-    { key: 'KEY_0002_PAGE', description: null, resource: '/page1/bbb', action: 'READ, WRITE' },
-    { key: 'KEY_0003_PAGE', description: '', resource: '/report/fin', action: 'PRINT' }
-  ]
+  return data
 }
 
 /**
@@ -217,28 +280,47 @@ async function checkResource() {
 /**
  * 
  */
-async function addResource() {
-  // TODO: ...
-}
+async function upsertResource() {
+  // TODO: Action...
 
-/**
- * 
- */
-async function saveResource() {
-  // TODO: ...
+  try {
+    formResource.modified_by = user.username;
+
+    if (formResource.id) {
+      const _r = await $fetch(`/api/permissions/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
+      showToast(`URL:'${formResource.resource}' 更新成功`, 'success')
+    } else {
+      formResource.created_by = user.username;
+
+      const _r = await $fetch('/api/permissions', { method: 'POST', body: { ...formResource } });
+      showToast(`URL:'${formResource.resource}' 新增成功`, 'success')
+    }
+
+    resetFormResource()
+    reloadTable()
+  } catch (error) {
+    showToast(`異動失敗: ${error}`, 'danger')
+  }
 }
 
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events - Table
+ * Events : Table
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
  * 
  */
-async function onTableReady() {
-  const _data = await loadResources()
+async function reloadTable() {
+  const _data = await loadResources();
   tableRef.value.setData(_data)
+}
+
+/**
+ * 
+ */
+async function onTableReady() {
+  reloadTable()
 }
 
 /**
