@@ -174,8 +174,8 @@ let timer = null;
  * Variables : Permissions
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-/** Permission option */
-const options = ['查詢', '新增', '修改', '刪除', '下載', '製表'];
+/** @type {string[]} Permission option */
+const options = PERMISSION_OPTIONS;
 const checked = ref(Array(options.length).fill(false))
 
 /**
