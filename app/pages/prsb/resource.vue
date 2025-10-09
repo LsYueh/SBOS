@@ -138,7 +138,34 @@ const tableColumns = [
     formatter: (cell) => {
       const action = cell.getValue();
       return action
-  }, }
+    },
+  },
+  {
+    title: '狀態'    , field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
+    formatter: (cell) => {
+      const view = cell.getData()
+      const deletedAt = view.deleted_at
+
+      const opacity = 0.5
+
+      if (deletedAt) {
+        cell.getRow().getElement().style.opacity = opacity
+      }
+
+      const textColor = deletedAt ? 'text-danger' : 'text-success';
+      
+      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:context-menu};" />`
+    },
+    cellClick: async (e, cell) => {
+      const view = cell.getData()
+      const deletedAt = view.deleted_at
+
+      // 重新啟用的時候不警告，不然太擾民了
+      if (!deletedAt && !confirm('確定要停用這個資源嗎？')) return
+
+      await alterResource(view.id, view.deleted_at)
+    },
+  }
 ];
 
 let timer = null;
@@ -161,6 +188,17 @@ const bitValue = computed(() => {
     return acc
   }, 0)
 })
+
+/**
+ * 設定 checkbox 狀態
+ * @param {number} [bitValue] 
+ */
+function setPermissionOptions(bitValue = 0) {
+  const num = Number(bitValue);
+  const safeValue = Number.isFinite(num) ? num : 0;
+
+  checked.value = checked.value.map((_, idx) => !!(safeValue & (1 << idx)));
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Toast
@@ -235,9 +273,8 @@ onMounted(async () => {
 
 /**
  * 
- * @param event 
  */
-function onResourceKeyup(event) {
+function onResourceKeyup() {
   clearTimeout(timer);
   timer = setTimeout(() => {
     formResource.key = formResource.resource ? $TAG(formResource.resource) : ''
@@ -259,6 +296,8 @@ function resetFormResource() {
   formResource.description = ''
   formResource.resource = ''
   formResource.action = ''
+
+  setPermissionOptions()
 }
 
 /**
@@ -283,7 +322,7 @@ async function checkResource() {
 async function upsertResource() {
   try {
     formResource.modified_by = user.username;
-    formResource.action = bitValue;
+    formResource.action = bitValue.value;
 
     if (formResource.id) {
       const _r = await $fetch(`/api/permissions/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
@@ -299,6 +338,22 @@ async function upsertResource() {
     reloadTable()
   } catch (error) {
     showToast(`異動失敗: ${error}`, 'danger')
+  }
+}
+
+/**
+ * @param id 
+ * @param deleted_at 
+ */
+async function alterResource(id, deleted_at) {
+  try {
+    formResource.modified_by = user.username
+    const statusTo = deleted_at ? 'Y' : 'N'
+    const _r = await $fetch(`/api/permissions/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formResource } })
+    
+    reloadTable()
+  } catch (err) {
+    showToast(`變更失敗: ${err}`, 'danger')
   }
 }
 
@@ -328,9 +383,7 @@ async function onTableReady() {
 function handleRowClick(rowData) {
   if (rowData) {
     Object.assign(formResource, rowData);
-
-    // 還原 checkbox 狀態
-    checked.value = checked.value.map((_, idx) => !!(formResource.action & (1 << idx)))
+    setPermissionOptions(formResource.action)
   }
 }
 

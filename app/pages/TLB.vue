@@ -238,7 +238,7 @@ const columns = [
       const view = cell.getData()
       const roleCount = view.role_count
 
-      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:pointer;" />`
+      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:context-menu;" />`
     },
     cellClick: async (e, cell) => {
       const view = cell.getData()
@@ -260,8 +260,10 @@ const columns = [
         // 不可以自己刪除自己
         if (_roleIsDisabled) cell.getElement().style.opacity = opacity
       }
+
+      const textColor = deletedAt ? 'text-danger' : 'text-success';
       
-      return `<i class="fas ${deletedAt ? 'fa-eye-slash' : 'fa-eye'}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'pointer'};" />`
+      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'context-menu'};" />`
     },
     cellClick: async (e, cell) => {
       const view = cell.getData()
