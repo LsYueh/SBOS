@@ -1,21 +1,16 @@
-import { defineEventHandler, getRouterParam, createError } from 'h3'
+import { defineEventHandler, getQuery } from 'h3';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { deleteUser } from '../../../dal/users.js'
+import { read } from '../../dal/permissions.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: '缺少 ID' })
-  }
-
-  throw createError({ statusCode: 501, statusMessage: 'Not implemented' });
+  const query = getQuery(event);
+  return await read()
 })

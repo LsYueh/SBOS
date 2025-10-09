@@ -149,6 +149,20 @@ const showToast = (msg, type = 'primary') => {
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
+ * Tooltips
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * Initialize tooltips
+ */
+function initBs5Tooltips() {
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+
+  return tooltipList
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
  * Modal
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
@@ -224,7 +238,7 @@ const columns = [
       const view = cell.getData()
       const roleCount = view.role_count
 
-      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:pointer;" />`
+      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:context-menu;" />`
     },
     cellClick: async (e, cell) => {
       const view = cell.getData()
@@ -246,8 +260,10 @@ const columns = [
         // 不可以自己刪除自己
         if (_roleIsDisabled) cell.getElement().style.opacity = opacity
       }
+
+      const textColor = deletedAt ? 'text-danger' : 'text-success';
       
-      return `<i class="fas ${deletedAt ? 'fa-eye-slash' : 'fa-eye'}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'pointer'};" />`
+      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'context-menu'};" />`
     },
     cellClick: async (e, cell) => {
       const view = cell.getData()
@@ -276,10 +292,7 @@ const viewUsers = ref(null)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 onMounted(async () => {
-  // Initialize tooltips
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+  initBs5Tooltips()
 
   if (userModalRef.value) {
     userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
