@@ -4,12 +4,12 @@ import { defineEventHandler } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { getRoles } from '../../dal/roles.js'
+import { read } from '../../dal/roles.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async () => {
-  return await getRoles()
+  return await read()
 })

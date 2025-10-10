@@ -1,5 +1,81 @@
 <template>
   <div class="container py-3">
+    <form @submit.prevent="addRolePermissions">
+      <div class="row gx-2 mb-3">
+        <!-- 左側：角色 -->
+        <div class="col">
+          <div class="input-group mb-2">
+            <div class="input-group-text p-0 flex-grow-1">
+              <Table ref="tableRolesRef" class="w-100" :columns="tableRoles.columns" :options="tableRoles.options"
+                @row-click="handleRoleRowClick"
+                @row-selected="handleRoleRowSelected"
+                @row-deselected="handleRoleRowDeselected"
+                @ready="onTableRolesReady"
+              />
+            </div>
+            <span class="input-group-text">角色</span>
+          </div>
+        </div>
+
+        <!-- 左側：資源 -->
+        <div class="col">
+          <div class="input-group mb-2">
+            <span class="input-group-text">資源</span>
+            <div class="input-group-text p-0 flex-grow-1">
+              <Table ref="tablePermissionsRef" class="w-100" :columns="tablePermissions.columns" :options="tablePermissions.options"
+                @row-click="handlePermissionsRowClick"
+                @row-selected="handlePermissionsRowSelected"
+                @row-deselected="handlePermissionsRowDeselected"
+                @ready="onTablePermissionsReady"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 權限 -->
+      <div class="row gx-2 mb-3">
+        <div class="col">
+          <div class="input-group">
+            <span class="input-group-text">權限</span>
+            <div class="input-group-text p-0 flex-grow-1">
+              <table class="table table-sm text-center mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th v-for="(item, index) in options" :key="index">{{ item }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td v-for="(item, index) in options" :key="index">
+                      <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch"><input v-model="checked[index]" class="form-check-input" type="checkbox" value="" aria-label="..." switch></div>
+                      </div>
+                    </td>
+                  </tr>                
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <div class="d-grid mx-auto h-100">
+            <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormRolePermissions"><i class="fa-solid fa-arrow-rotate-left"/></button>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <div class="d-grid mx-auto h-100">
+            <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip"><i class="fa-solid fa-square-check"/></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role-Permissions (PRSB) -->
+      <div class="row gx-2 mb-3">
+      </div>
+    </form>
 
     <!-- Toast 提示 -->
     <div class="toast-container position-fixed top-0 end-0 p-3">
@@ -32,6 +108,35 @@ definePageMeta({
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Variables
 ---------+---------+---------+---------+---------+---------+---------+--------*/
+
+const defaultTableOptions = {
+  height:"311px",
+  layout:"fitColumns",
+  selectableRows: 1,
+  selectableRowsPersistence:false, // disable selection persistence
+  pagination: true,
+  paginationSize: 5
+}
+
+/** Roles */
+const tableRolesRef = ref(null)
+const tableRoles = {
+  columns: [
+    { title: 'Key', field: 'title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, },
+    { title: '角色', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, headerFilter:"input", },
+  ],
+  options: { ...defaultTableOptions }
+}
+
+/** Permissions */
+const tablePermissionsRef = ref(null)
+const tablePermissions = {
+  columns: [
+    { title: 'URL', field: 'resource', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, headerFilter:"input", },
+    { title: '說明', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, },
+  ],
+  options:  { ...defaultTableOptions }
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Variables : Permissions
@@ -94,8 +199,112 @@ onMounted(async () => {
 });
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events : Permission Input/Edit
+ * Events : Role-Permissions Input/Edit
 ---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * 
+ */
+async function resetFormRolePermissions() {
+
+}
+
+/**
+ * 
+ */
+async function addRolePermissions() {
+
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events : Table Roles
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * 
+ */
+async function reloadTableRoles() {
+  const _data = await $fetch('/api/roles');
+  tableRolesRef.value.setData(_data)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handleRoleRowClick(rowData) {
+  // TODO: ...
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handleRoleRowSelected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handleRoleRowDeselected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ */
+async function onTableRolesReady() {
+  reloadTableRoles()
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events : Table Permissions
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * 
+ */
+async function reloadTablePermissions() {
+  const _data = await $fetch('/api/permissions');
+  tablePermissionsRef.value.setData(_data)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionsRowClick(rowData) {
+  // TODO: ...
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionsRowSelected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionsRowDeselected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ */
+async function onTablePermissionsReady() {
+  reloadTablePermissions()
+}
 
 </script>
 

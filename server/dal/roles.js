@@ -20,7 +20,7 @@ const pool = usePgPool()
 /**
  * @returns 
  */
-export async function getRoles() {
+export async function read() {
   const res = await pool.query(`SELECT R.id, R.title, R.description FROM sbos.roles R WHERE R.deleted_at IS NULL`)
   return res.rows ?? []
 }

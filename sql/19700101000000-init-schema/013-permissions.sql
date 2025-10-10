@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS sbos.permissions (
   id uuid DEFAULT uuid_generate_v1() NOT NULL, -- UUIDv1
   "key" VARCHAR(100) NOT NULL UNIQUE, -- ex: "PAGE_DASHBOARD_VIEW"
   description text NULL, -- 說明
-  resource VARCHAR(255), -- ex: "/admin/dashboard"
-  "action" VARCHAR(50),  -- ex: "READ", "WRITE", "DELETE"
+  resource VARCHAR(255), -- 資源 ex: "/admin/dashboard"
+  "action" VARCHAR(16),  -- 操作 (BitSet)
   CONSTRAINT permissions_pkey PRIMARY KEY (id),
   CONSTRAINT permissions_unique_01 UNIQUE ("key")
 );
@@ -18,5 +18,5 @@ COMMENT ON COLUMN sbos.permissions.modified_by IS '異動人員';
 COMMENT ON COLUMN sbos.permissions.id IS 'UUIDv1';
 COMMENT ON COLUMN sbos.permissions."key" IS 'ex: "PAGE_DASHBOARD_VIEW"';
 COMMENT ON COLUMN sbos.permissions.description IS '說明';
-COMMENT ON COLUMN sbos.permissions.resource IS 'ex: "/admin/dashboard"';
-COMMENT ON COLUMN sbos.permissions."action" IS 'ex: "READ", "WRITE", "DELETE"';
+COMMENT ON COLUMN sbos.permissions.resource IS '資源 ex: "/admin/dashboard"';
+COMMENT ON COLUMN sbos.permissions."action" IS '操作 (BitSet)';
