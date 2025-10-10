@@ -5,7 +5,7 @@ import { usePgPool } from '../utils/db.js'
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** Database Pool */
-const pool = usePgPool()
+const pool = usePgPool();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
@@ -22,5 +22,5 @@ const pool = usePgPool()
  */
 export async function read() {
   const res = await pool.query(`SELECT R.id, R.title, R.description FROM sbos.roles R WHERE R.deleted_at IS NULL`)
-  return res.rows ?? []
+  return res.rows ?? [];
 }

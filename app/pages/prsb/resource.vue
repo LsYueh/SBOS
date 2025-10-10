@@ -304,7 +304,7 @@ function resetFormResource() {
  * @returns 
  */
 async function loadResources() {
-  const data = await $fetch('/api/permissions');
+  const data = await $fetch('/api/resources');
 
   return data
 }
@@ -325,12 +325,12 @@ async function upsertResource() {
     formResource.action = bitValue.value;
 
     if (formResource.id) {
-      const _r = await $fetch(`/api/permissions/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
+      const _r = await $fetch(`/api/resources/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
       showToast(`URL:'${formResource.resource}' 更新成功`, 'success')
     } else {
       formResource.created_by = user.username;
 
-      const _r = await $fetch('/api/permissions', { method: 'POST', body: { ...formResource } });
+      const _r = await $fetch('/api/resources', { method: 'POST', body: { ...formResource } });
       showToast(`URL:'${formResource.resource}' 新增成功`, 'success')
     }
 
@@ -349,7 +349,7 @@ async function alterResource(id, deleted_at) {
   try {
     formResource.modified_by = user.username
     const statusTo = deleted_at ? 'Y' : 'N'
-    const _r = await $fetch(`/api/permissions/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formResource } })
+    const _r = await $fetch(`/api/resources/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formResource } })
     
     reloadTable()
   } catch (err) {

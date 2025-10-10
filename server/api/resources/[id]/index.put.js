@@ -4,7 +4,7 @@ import { defineEventHandler, getRouterParam, getQuery, readBody, createError } f
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { update } from '../../../dal/permissions.js';
+import { update } from '../../../dal/resources.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler

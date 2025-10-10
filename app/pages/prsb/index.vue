@@ -22,11 +22,11 @@
           <div class="input-group mb-2">
             <span class="input-group-text">資源</span>
             <div class="input-group-text p-0 flex-grow-1">
-              <Table ref="tablePermissionsRef" class="w-100" :columns="tablePermissions.columns" :options="tablePermissions.options"
-                @row-click="handlePermissionsRowClick"
-                @row-selected="handlePermissionsRowSelected"
-                @row-deselected="handlePermissionsRowDeselected"
-                @ready="onTablePermissionsReady"
+              <Table ref="tableResRef" class="w-100" :columns="tableRes.columns" :options="tableRes.options"
+                @row-click="handleResRowClick"
+                @row-selected="handleResRowSelected"
+                @row-deselected="handleResRowDeselected"
+                @ready="onTableResReady"
               />
             </div>
           </div>
@@ -129,10 +129,11 @@ const tableRoles = {
 }
 
 /** Permissions */
-const tablePermissionsRef = ref(null)
-const tablePermissions = {
+const tableResRef = ref(null)
+const tableRes = {
   columns: [
-    { title: 'URL', field: 'resource', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, headerFilter:"input", },
+    { title: ' ', widthGrow: 0.1, headerSort:false, },
+    { title: 'URL', field: 'resource', headerHozAlign: 'center', headerSort:false, headerFilter:"input", },
     { title: '說明', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, },
   ],
   options:  { ...defaultTableOptions }
@@ -262,22 +263,22 @@ async function onTableRolesReady() {
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events : Table Permissions
+ * Events : Table Resources
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
  * 
  */
-async function reloadTablePermissions() {
-  const _data = await $fetch('/api/permissions');
-  tablePermissionsRef.value.setData(_data)
+async function reloadTableRes() {
+  const _data = await $fetch('/api/resources');
+  tableResRef.value.setData(_data)
 }
 
 /**
  * 
  * @param rowData 
  */
-function handlePermissionsRowClick(rowData) {
+function handleResRowClick(rowData) {
   // TODO: ...
 }
 
@@ -285,28 +286,32 @@ function handlePermissionsRowClick(rowData) {
  * 
  * @param rowData 
  */
-function handlePermissionsRowSelected(rowData) {
-  // TODO: ...
-  console.log(rowData)
-}
-
-/**
- * 
- * @param rowData 
- */
-function handlePermissionsRowDeselected(rowData) {
+function handleResRowSelected(rowData) {
   // TODO: ...
   console.log(rowData)
 }
 
 /**
  * 
+ * @param rowData 
  */
-async function onTablePermissionsReady() {
-  reloadTablePermissions()
+function handleResRowDeselected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ */
+async function onTableResReady() {
+  reloadTableRes()
 }
 
 </script>
 
 <style scoped>
+.tabulator {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+}
 </style>

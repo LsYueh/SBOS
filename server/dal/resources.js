@@ -48,20 +48,18 @@ export async function create(input) {
   } = input;
 
   const res = await pool.query(
-    `INSERT INTO sbos.permissions (created_by, modified_by, key, description, resource, action) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+    `INSERT INTO sbos.resources (created_by, modified_by, key, description, resource, action) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
     [ created_by, modified_by, key, description, resource, action ]
   );
 
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0]?.id ?? null;
 }
 
 /**
  * @returns 
  */
 export async function read() {
-  const res = await pool.query(`SELECT P.* FROM sbos.permissions P ORDER BY P.resource ASC`)
+  const res = await pool.query(`SELECT P.* FROM sbos.resources P ORDER BY P.resource ASC`)
   return res.rows ?? []
 }
 
@@ -77,7 +75,7 @@ export async function update(id, input) {
   } = input;
 
   const query = `
-    UPDATE sbos.permissions 
+    UPDATE sbos.resources 
     SET modified_by = $1, updated_at = now(), "description"=$2, resource=$3, action=$4 
     WHERE id=$5::uuid 
     RETURNING id
@@ -86,9 +84,7 @@ export async function update(id, input) {
 
   const res = await pool.query(query, values);
 
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0]?.id ?? null;
 }
 
 /**
@@ -100,17 +96,15 @@ export async function enable(id, input) {
   const { modified_by } = input;
 
   const query = `
-    UPDATE sbos.permissions 
+    UPDATE sbos.resources 
     SET modified_by = $1, updated_at = now(), deleted_at = NULL
     WHERE id=$2::uuid 
     RETURNING id
   `;
 
   const res = await pool.query(query, [modified_by, id]);
-  
-  const permissions_id = res.rows[0].id;
 
-  return permissions_id
+  return res.rows[0]?.id ?? null;
 }
 
 /**
@@ -122,7 +116,7 @@ export async function disable(id, input) {
   const { modified_by } = input
 
   const query = `
-    UPDATE sbos.permissions 
+    UPDATE sbos.resources 
     SET modified_by = $1, updated_at = now(), deleted_at = now() 
     WHERE id=$2::uuid 
     RETURNING id
@@ -130,9 +124,7 @@ export async function disable(id, input) {
 
   const res = await pool.query(query, [modified_by, id]);
 
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0]?.id ?? null;
 }
 
 /**
@@ -140,6 +132,6 @@ export async function disable(id, input) {
  * @returns 
  */
 export async function del(id) {
-  await pool.query(`DELETE FROM sbos.permissions WHERE id=$1::uuid`, [id]);
+  await pool.query(`DELETE FROM sbos.resources WHERE id=$1::uuid`, [id]);
   return true;
 }
