@@ -89,7 +89,7 @@
 <script setup>
 import { reactive, ref, onMounted  } from 'vue';
 import Table from '~/components/Table.vue';
-const { $bootstrap, $dayjs } = useNuxtApp();
+const { $bootstrap } = useNuxtApp();
 
 const user = useUserStore();
 
@@ -232,11 +232,6 @@ function initBs5Tooltips() {
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
-
-/** YYYY/MM/DD HH:mm */
-function datetimeFormatter(v) {
-  return v ? $dayjs(v).format('YYYY/MM/DD HH:mm') : '----/--/-- --:--:--'
-}
 
 /**
  * (Factory function)

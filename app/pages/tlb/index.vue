@@ -121,7 +121,7 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import View from '~/components/View.vue'
-const { $bootstrap, $dayjs } = useNuxtApp();
+const { $bootstrap } = useNuxtApp();
 
 const user = useUserStore()
 
@@ -202,15 +202,6 @@ const formUserRoles = reactive({
   selectedRoleTitle: 'user',
   _account: '',
 })
-
-/**------+---------+---------+---------+---------+---------+---------+----------
- * Helper
----------+---------+---------+---------+---------+---------+---------+--------*/
-
-/** YYYY/MM/DD HH:mm */
-function datetimeFormatter(v) {
-  return v ? $dayjs(v).format('YYYY/MM/DD HH:mm') : '----/--/-- --:--:--'
-}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tabulator

@@ -1,6 +1,6 @@
 <template>
   <div class="container py-3">
-    <form @submit.prevent="addRolePermissions">
+    <form @submit.prevent="addPermission">
       <div class="row gx-2 mb-3">
         <!-- 左側：角色 -->
         <div class="col">
@@ -33,11 +33,11 @@
         </div>
       </div>
 
-      <!-- 權限 -->
       <div class="row gx-2 mb-3">
+        <!-- 操作 -->
         <div class="col">
           <div class="input-group">
-            <span class="input-group-text">權限</span>
+            <span class="input-group-text">操作</span>
             <div class="input-group-text p-0 flex-grow-1">
               <table class="table table-sm text-center mb-0">
                 <thead class="table-light">
@@ -61,7 +61,7 @@
 
         <div class="col-auto">
           <div class="d-grid mx-auto h-100">
-            <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormRolePermissions"><i class="fa-solid fa-arrow-rotate-left"/></button>
+            <button type="button" class="btn btn-secondary" title="清除" data-bs-toggle="tooltip" @click="resetFormPermission"><i class="fa-solid fa-arrow-rotate-left"/></button>
           </div>
         </div>
 
@@ -72,8 +72,21 @@
         </div>
       </div>
 
-      <!-- Role-Permissions (PRSB) -->
+      <!-- 權限 (PRSB) -->
       <div class="row gx-2 mb-3">
+        <div class="col">
+          <div class="input-group mb-2">
+            <span class="input-group-text">權限</span>
+            <div class="input-group-text p-0 flex-grow-1">
+              <Table ref="tablePermissionsRef" class="w-100" :columns="tablePermissions.columns" :options="tablePermissions.options"
+                @row-click="handlePermissionRowClick"
+                @row-selected="handlePermissionRowSelected"
+                @row-deselected="handlePermissionRowDeselected"
+                @ready="onTablePermissionsReady"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </form>
 
@@ -93,7 +106,7 @@
 
 <script setup>
 import { reactive, ref, onMounted  } from 'vue';
-const { $bootstrap, $dayjs } = useNuxtApp();
+const { $bootstrap } = useNuxtApp();
 
 const user = useUserStore();
 
@@ -128,13 +141,54 @@ const tableRoles = {
   options: { ...defaultTableOptions }
 }
 
-/** Permissions */
+/** Resources */
 const tableResRef = ref(null)
 const tableRes = {
   columns: [
     { title: ' ', widthGrow: 0.1, headerSort:false, },
     { title: 'URL', field: 'resource', headerHozAlign: 'center', headerSort:false, headerFilter:"input", },
     { title: '說明', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, },
+  ],
+  options:  { ...defaultTableOptions }
+}
+
+/** Permissions */
+const tablePermissionsRef = ref(null)
+const tablePermissions = {
+  columns: [
+    { title: 'URL', field: 'resource', headerHozAlign: 'center', headerSort:false, headerFilter:"input", },
+    { title: '建立時間', field: 'created_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '更新時間', field: 'updated_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '權限', field: 'action', hozAlign: 'right',
+      formatter: (cell) => {
+        const action = cell.getValue();
+        return action
+      },
+    },
+    {
+      title: '狀態', field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
+      formatter: (cell) => {
+        const view = cell.getData()
+        const deletedAt = view.deleted_at
+
+        const opacity = 0.5
+
+        if (deletedAt) {
+          cell.getRow().getElement().style.opacity = opacity
+        }
+
+        const textColor = deletedAt ? 'text-danger' : 'text-success';
+        
+        return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:context-menu};" />`
+      },
+      cellClick: async (e, cell) => {
+        const view = cell.getData()
+
+        await alterPermission(view.id, view.deleted_at)
+
+        showToast(`URL:'${view.resource}' 權限更新成功`, 'success')
+      },
+    }
   ],
   options:  { ...defaultTableOptions }
 }
@@ -200,20 +254,20 @@ onMounted(async () => {
 });
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events : Role-Permissions Input/Edit
+ * Events : Permissions Input/Edit
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
  * 
  */
-async function resetFormRolePermissions() {
+async function resetFormPermission() {
 
 }
 
 /**
  * 
  */
-async function addRolePermissions() {
+async function addPermission() {
 
 }
 
@@ -305,6 +359,65 @@ function handleResRowDeselected(rowData) {
  */
 async function onTableResReady() {
   reloadTableRes()
+}
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Events : Table Permissions
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * 
+ */
+async function reloadTablePermissions() {
+  const _data = []
+  tableResRef.value.setData(_data)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionRowClick(rowData) {
+  // TODO: ...
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionRowSelected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ * @param rowData 
+ */
+function handlePermissionRowDeselected(rowData) {
+  // TODO: ...
+  console.log(rowData)
+}
+
+/**
+ * 
+ */
+async function onTablePermissionsReady() {
+  reloadTablePermissions()
+}
+
+/**
+ * @param id 
+ * @param deleted_at 
+ */
+async function alterPermission(id, deleted_at) {
+  try {
+    const statusTo = deleted_at ? 'Y' : 'N';
+
+    // TODO: ...
+  } catch (err) {
+    showToast(`變更失敗: ${err}`, 'danger')
+  }
 }
 
 </script>
