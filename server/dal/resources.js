@@ -1,4 +1,3 @@
-import BitSet from 'bitset';
 import { usePgPool } from '../utils/db.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -7,30 +6,6 @@ import { usePgPool } from '../utils/db.js';
 
 /** Database Pool */
 const pool = usePgPool();
-
-/**------+---------+---------+---------+---------+---------+---------+----------
- * Helper
----------+---------+---------+---------+---------+---------+---------+--------*/
-
-/**
- * BitSet to Actions
- * @param {BitSet} bitSet 
- * @returns 
- */
-function btoa(bitSet) {
-  const bs = new BitSet;
-  return []
-}
-
-/**
- * Actions to BitSet
- * @param {string[]} action 
- * @returns 
- */
-function atob(action) {
-  const bs = new BitSet;
-  return bs
-}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Exports

@@ -1,7 +1,7 @@
 <template>
   <div class="container py-3">
     <form @submit.prevent="addPermission">
-      <div class="row gx-2 mb-3">
+      <div class="row gx-2 mb-3 align-items-center">
         <!-- 左側：角色 -->
         <div class="col">
           <div class="input-group mb-2">
@@ -15,6 +15,10 @@
             </div>
             <span class="input-group-text">角色</span>
           </div>
+        </div>
+
+        <div class="col-auto">
+          <i class="fa-solid fa-plus"/>
         </div>
 
         <!-- 左側：資源 -->
@@ -122,6 +126,13 @@ definePageMeta({
  * Variables
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Variables : Table/View
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/** Default Table Options */
 const defaultTableOptions = {
   height:"311px",
   layout:"fitColumns",
@@ -280,33 +291,32 @@ async function addPermission() {
  */
 async function reloadTableRoles() {
   const _data = await $fetch('/api/roles');
-  tableRolesRef.value.setData(_data)
+  tableRolesRef.value.setData(_data);
 }
 
 /**
  * 
- * @param rowData 
+ * @param role 
  */
-function handleRoleRowClick(rowData) {
+function handleRoleRowClick(role) {
   // TODO: ...
 }
 
 /**
  * 
- * @param rowData 
+ * @param role 
  */
-function handleRoleRowSelected(rowData) {
-  // TODO: ...
-  console.log(rowData)
+async function handleRoleRowSelected(role) {
+  const _data = await $fetch(`/api/permissions/${role.id}`);
+  tablePermissionsRef.value.setData(_data);
 }
 
 /**
  * 
- * @param rowData 
+ * @param role 
  */
-function handleRoleRowDeselected(rowData) {
-  // TODO: ...
-  console.log(rowData)
+function handleRoleRowDeselected(role) {
+  tablePermissionsRef.value.setData([]);
 }
 
 /**
@@ -330,28 +340,28 @@ async function reloadTableRes() {
 
 /**
  * 
- * @param rowData 
+ * @param res 
  */
-function handleResRowClick(rowData) {
+function handleResRowClick(res) {
   // TODO: ...
 }
 
 /**
  * 
- * @param rowData 
+ * @param res 
  */
-function handleResRowSelected(rowData) {
+function handleResRowSelected(res) {
   // TODO: ...
-  console.log(rowData)
+  console.log(res)
 }
 
 /**
  * 
- * @param rowData 
+ * @param res 
  */
-function handleResRowDeselected(rowData) {
+function handleResRowDeselected(res) {
   // TODO: ...
-  console.log(rowData)
+  console.log(res)
 }
 
 /**
@@ -375,28 +385,28 @@ async function reloadTablePermissions() {
 
 /**
  * 
- * @param rowData 
+ * @param permission 
  */
-function handlePermissionRowClick(rowData) {
+function handlePermissionRowClick(permission) {
   // TODO: ...
 }
 
 /**
  * 
- * @param rowData 
+ * @param permission 
  */
-function handlePermissionRowSelected(rowData) {
+function handlePermissionRowSelected(permission) {
   // TODO: ...
-  console.log(rowData)
+  console.log(permission)
 }
 
 /**
  * 
- * @param rowData 
+ * @param permission 
  */
-function handlePermissionRowDeselected(rowData) {
+function handlePermissionRowDeselected(permission) {
   // TODO: ...
-  console.log(rowData)
+  console.log(permission)
 }
 
 /**
