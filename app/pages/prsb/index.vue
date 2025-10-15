@@ -7,7 +7,6 @@
           <div class="input-group mb-2">
             <div class="input-group-text p-0 flex-grow-1">
               <Table ref="tableRolesRef" class="w-100" :columns="tableRoles.columns" :options="tableRoles.options"
-                @row-click="handleRoleRowClick"
                 @row-selected="handleRoleRowSelected"
                 @row-deselected="handleRoleRowDeselected"
                 @ready="onTableRolesReady"
@@ -27,7 +26,6 @@
             <span class="input-group-text">資源</span>
             <div class="input-group-text p-0 flex-grow-1">
               <Table ref="tableResRef" class="w-100" :columns="tableRes.columns" :options="tableRes.options"
-                @row-click="handleResRowClick"
                 @row-selected="handleResRowSelected"
                 @row-deselected="handleResRowDeselected"
                 @ready="onTableResReady"
@@ -82,11 +80,10 @@
           <div class="input-group mb-2">
             <span class="input-group-text">權限</span>
             <div class="input-group-text p-0 flex-grow-1">
-              <Table ref="tablePermissionsRef" class="w-100" :columns="tablePermissions.columns" :options="tablePermissions.options"
-                @row-click="handlePermissionRowClick"
-                @row-selected="handlePermissionRowSelected"
-                @row-deselected="handlePermissionRowDeselected"
-                @ready="onTablePermissionsReady"
+              <Table ref="tablePrsbRef" class="w-100" :columns="tablePrsb.columns" :options="tablePrsb.options"
+                @row-selected="handlePrsbRowSelected"
+                @row-deselected="handlePrsbRowDeselected"
+                @ready="onTablePrsbReady"
               />
             </div>
           </div>
@@ -123,10 +120,31 @@ definePageMeta({
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Variables
+ * Variables : Data Models
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+/** Role */
+const mRole = reactive({
+  id: null,
+});
 
+/** Resource */
+const mRes = reactive({
+  id: null,
+});
+
+/** Permission */
+const mPrsb = reactive({
+  created_by : '',
+  created_at : null,
+  modified_by: '',
+  updated_at : null,
+  deleted_at : null,
+
+  role_id    : null,
+  resource_id: null,
+  action     : '',
+});
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Variables : Table/View
@@ -136,8 +154,14 @@ definePageMeta({
 const defaultTableOptions = {
   height:"311px",
   layout:"fitColumns",
+  columnDefaults:{
+    headerHozAlign: 'center',
+    headerSort: false,
+    hozAlign: 'center',
+    resizable: false,
+  },
   selectableRows: 1,
-  selectableRowsPersistence:false, // disable selection persistence
+  selectableRowsPersistence: false, // disable selection persistence
   pagination: true,
   paginationSize: 5
 }
@@ -146,8 +170,8 @@ const defaultTableOptions = {
 const tableRolesRef = ref(null)
 const tableRoles = {
   columns: [
-    { title: 'Key', field: 'title', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, },
-    { title: '角色', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, headerFilter:"input", },
+    { title: 'Key', field: 'title' },
+    { title: '角色', field: 'description', widthGrow: 0.5, headerFilter:"input", },
   ],
   options: { ...defaultTableOptions }
 }
@@ -156,28 +180,28 @@ const tableRoles = {
 const tableResRef = ref(null)
 const tableRes = {
   columns: [
-    { title: ' ', widthGrow: 0.1, headerSort:false, },
-    { title: 'URL', field: 'resource', headerHozAlign: 'center', headerSort:false, headerFilter:"input", },
-    { title: '說明', field: 'description', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5, },
+    { title: ' ', widthGrow: 0.1, },
+    { title: 'URL', field: 'resource', hozAlign: 'left', headerFilter:"input", },
+    { title: '說明', field: 'description', widthGrow: 0.5, },
   ],
   options:  { ...defaultTableOptions }
 }
 
 /** Permissions */
-const tablePermissionsRef = ref(null)
-const tablePermissions = {
+const tablePrsbRef = ref(null)
+const tablePrsb = {
   columns: [
-    { title: 'URL', field: 'resource', headerHozAlign: 'center', headerSort:false, headerFilter:"input", },
-    { title: '建立時間', field: 'created_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
-    { title: '更新時間', field: 'updated_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
-    { title: '權限', field: 'action', hozAlign: 'right',
+    { title: 'URL', field: 'resource', hozAlign: 'left', headerFilter:"input", },
+    { title: '建立時間', field: 'created_at', widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '更新時間', field: 'updated_at', widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '權限', field: 'action', hozAlign: 'right', headerSort: true,
       formatter: (cell) => {
         const action = cell.getValue();
         return action
       },
     },
     {
-      title: '狀態', field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
+      title: '狀態', field: 'deleted_at', widthGrow: 0.3,
       formatter: (cell) => {
         const view = cell.getData()
         const deletedAt = view.deleted_at
@@ -222,6 +246,17 @@ const bitValue = computed(() => {
     return acc
   }, 0)
 })
+
+/**
+ * 設定 checkbox 狀態
+ * @param {number} [bitValue] 
+ */
+function setPermissionOptions(bitValue = 0) {
+  const num = Number(bitValue);
+  const safeValue = Number.isFinite(num) ? num : 0;
+
+  checked.value = checked.value.map((_, idx) => !!(safeValue & (1 << idx)));
+}
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Toast
@@ -271,15 +306,19 @@ onMounted(async () => {
 /**
  * 
  */
-async function resetFormPermission() {
+function resetFormPermission() {
+  tableRolesRef.value.deselectAll();
+    tableResRef.value.deselectAll();
+   tablePrsbRef.value.deselectAll();
 
+  setPermissionOptions();
 }
 
 /**
  * 
  */
 async function addPermission() {
-
+  // TODO: ...
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -298,17 +337,14 @@ async function reloadTableRoles() {
  * 
  * @param role 
  */
-function handleRoleRowClick(role) {
-  // TODO: ...
-}
-
-/**
- * 
- * @param role 
- */
 async function handleRoleRowSelected(role) {
-  const _data = await $fetch(`/api/permissions/${role.id}`);
-  tablePermissionsRef.value.setData(_data);
+  if (role) {
+    mRole.id = role.id;
+
+    const _data = await $fetch(`/api/permissions/${role.id}`);
+    tablePrsbRef.value.setData(_data);
+  }
+  
 }
 
 /**
@@ -316,7 +352,12 @@ async function handleRoleRowSelected(role) {
  * @param role 
  */
 function handleRoleRowDeselected(role) {
-  tablePermissionsRef.value.setData([]);
+  if (role) {
+    mRole.id = null;
+
+    tableResRef.value.deselectAll();
+    tablePrsbRef.value.setData([]);
+  }
 }
 
 /**
@@ -342,17 +383,10 @@ async function reloadTableRes() {
  * 
  * @param res 
  */
-function handleResRowClick(res) {
-  // TODO: ...
-}
-
-/**
- * 
- * @param res 
- */
 function handleResRowSelected(res) {
-  // TODO: ...
-  console.log(res)
+  if (res) {
+    mRes.id = res.id;
+  }
 }
 
 /**
@@ -360,8 +394,9 @@ function handleResRowSelected(res) {
  * @param res 
  */
 function handleResRowDeselected(res) {
-  // TODO: ...
-  console.log(res)
+  if (res) {
+    mRes.id = null;
+  }
 }
 
 /**
@@ -372,13 +407,13 @@ async function onTableResReady() {
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Events : Table Permissions
+ * Events : Table Permissions (PRSB)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
  * 
  */
-async function reloadTablePermissions() {
+async function reloadTablePrsb() {
   const _data = []
   tableResRef.value.setData(_data)
 }
@@ -387,33 +422,37 @@ async function reloadTablePermissions() {
  * 
  * @param permission 
  */
-function handlePermissionRowClick(permission) {
-  // TODO: ...
+function handlePrsbRowSelected(permission) {
+  if (permission) {
+    Object.assign(mPrsb, permission);
+
+    tableResRef.value.deselectAll();
+
+    // TODO: ...
+    console.log(permission)
+  }
 }
 
 /**
  * 
  * @param permission 
  */
-function handlePermissionRowSelected(permission) {
-  // TODO: ...
-  console.log(permission)
-}
+function handlePrsbRowDeselected(permission) {
+  if (permission) {
+    resetModelPrsb();
 
-/**
- * 
- * @param permission 
- */
-function handlePermissionRowDeselected(permission) {
-  // TODO: ...
-  console.log(permission)
+    tableResRef.value.deselectAll();
+
+    // TODO: ...
+    console.log(permission)
+  }
 }
 
 /**
  * 
  */
-async function onTablePermissionsReady() {
-  reloadTablePermissions()
+async function onTablePrsbReady() {
+  reloadTablePrsb()
 }
 
 /**
@@ -428,6 +467,20 @@ async function alterPermission(id, deleted_at) {
   } catch (err) {
     showToast(`變更失敗: ${err}`, 'danger')
   }
+}
+
+/**
+ * 
+ */
+function resetModelPrsb() {
+  mPrsb.created_at  = null;
+  mPrsb.modified_by = '';
+  mPrsb.updated_at  = null;
+  mPrsb.deleted_at  = null;
+
+  mPrsb.role_id     = null;
+  mPrsb.resource_id = null;
+  mPrsb.action      = '';
 }
 
 </script>

@@ -67,6 +67,10 @@ function setData(data = []) {
   if (tableInstance) tableInstance.replaceData(data);
 }
 
+function deselectAll() {
+  if (tableInstance) tableInstance.deselectRow();
+}
+
 onBeforeUnmount(() => {
   if (tableInstance) {
     tableInstance.destroy();
@@ -74,7 +78,7 @@ onBeforeUnmount(() => {
   }
 })
 
-defineExpose({ setData })
+defineExpose({ setData, deselectAll })
 </script>
 
 <style scoped>
