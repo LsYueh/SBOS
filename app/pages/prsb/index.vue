@@ -116,7 +116,7 @@ const user = useUserStore();
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 definePageMeta({
-  headerTitle: '權限管理 (PRSB)'
+  headerTitle: '權限管理 (PRSB)',
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -126,11 +126,13 @@ definePageMeta({
 /** Role */
 const mRole = reactive({
   id: null,
+  description: '',
 });
 
 /** Resource */
 const mRes = reactive({
   id: null,
+  resource: '',
 });
 
 /** Permission */
@@ -163,7 +165,7 @@ const defaultTableOptions = {
   selectableRows: 1,
   selectableRowsPersistence: false, // disable selection persistence
   pagination: true,
-  paginationSize: 5
+  paginationSize: 5,
 }
 
 /** Roles */
@@ -173,7 +175,7 @@ const tableRoles = {
     { title: 'Key', field: 'title' },
     { title: '角色', field: 'description', widthGrow: 0.5, headerFilter:"input", },
   ],
-  options: { ...defaultTableOptions }
+  options: { ...defaultTableOptions },
 }
 
 /** Resources */
@@ -184,7 +186,7 @@ const tableRes = {
     { title: 'URL', field: 'resource', hozAlign: 'left', headerFilter:"input", },
     { title: '說明', field: 'description', widthGrow: 0.5, },
   ],
-  options:  { ...defaultTableOptions }
+  options:  { ...defaultTableOptions },
 }
 
 /** Permissions */
@@ -197,19 +199,19 @@ const tablePrsb = {
     { title: '權限', field: 'action', hozAlign: 'right', headerSort: true,
       formatter: (cell) => {
         const action = cell.getValue();
-        return action
+        return action;
       },
     },
     {
       title: '狀態', field: 'deleted_at', widthGrow: 0.3,
       formatter: (cell) => {
-        const view = cell.getData()
-        const deletedAt = view.deleted_at
+        const view = cell.getData();
+        const deletedAt = view.deleted_at;
 
-        const opacity = 0.5
+        const opacity = 0.5;
 
         if (deletedAt) {
-          cell.getRow().getElement().style.opacity = opacity
+          cell.getRow().getElement().style.opacity = opacity;
         }
 
         const textColor = deletedAt ? 'text-danger' : 'text-success';
@@ -217,15 +219,15 @@ const tablePrsb = {
         return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:context-menu};" />`
       },
       cellClick: async (e, cell) => {
-        const view = cell.getData()
+        const PRSB = cell.getData();
 
-        await alterPermission(view.id, view.deleted_at)
+        await alterPermission(PRSB.role_id, PRSB.resource_id, PRSB.deleted_at);
 
-        showToast(`URL:'${view.resource}' 權限更新成功`, 'success')
+        showToast(`URL:'${PRSB.resource}' 權限更新成功`, 'success');
       },
     }
   ],
-  options:  { ...defaultTableOptions }
+  options:  { ...defaultTableOptions },
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -242,9 +244,9 @@ const checked = ref(Array(options.length).fill(false));
 const bitValue = computed(() => {
   // 計算 BitSet 整數
   return checked.value.reduce((acc, val, idx) => {
-    if (val) acc |= (1 << idx)
-    return acc
-  }, 0)
+    if (val) acc |= (1 << idx);
+    return acc;
+  }, 0);
 })
 
 /**
@@ -291,6 +293,16 @@ function initBs5Tooltips() {
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+/**
+ * UUIDv1 檢查
+ * @param {string} str 
+ * @returns 
+ */
+function isUUIDv1(str = '') {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Events
 ---------+---------+---------+---------+---------+---------+---------+--------*/
@@ -304,7 +316,7 @@ onMounted(async () => {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * 
+ * @description Table 的 `row-deselected` 事件會連動 `Data Model` 的清除行為
  */
 function resetFormPermission() {
   tableRolesRef.value.deselectAll();
@@ -318,7 +330,28 @@ function resetFormPermission() {
  * 
  */
 async function addPermission() {
-  // TODO: ...
+  if (!isUUIDv1(mRole.id) || !isUUIDv1(mRes.id)) showToast(`請選擇好角色與資源`, 'danger');
+
+  try {
+      mPrsb.modified_by = user.username;
+      mPrsb.action = bitValue.value;
+
+    if (mPrsb.role_id) {
+      const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
+      showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 更新成功`, 'success');
+    } else {
+      mPrsb.created_by = user.username;
+      mPrsb.resource_id = mRes.id;
+
+      const _r = await $fetch(`/api/permissions/${mRole.id}`, { method: 'POST', body: { ...mPrsb } });
+      showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 新增成功`, 'success');
+    }
+
+    resetFormPermission();
+    reloadTablePrsb();
+  } catch (error) {
+    showToast(`異動失敗: ${error}`, 'danger');
+  }
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -340,11 +373,11 @@ async function reloadTableRoles() {
 async function handleRoleRowSelected(role) {
   if (role) {
     mRole.id = role.id;
+    mRole.description = role.description;
 
     const _data = await $fetch(`/api/permissions/${role.id}`);
     tablePrsbRef.value.setData(_data);
   }
-  
 }
 
 /**
@@ -354,8 +387,11 @@ async function handleRoleRowSelected(role) {
 function handleRoleRowDeselected(role) {
   if (role) {
     mRole.id = null;
+    mRole.description = '';
 
     tableResRef.value.deselectAll();
+    tablePrsbRef.value.deselectAll();
+
     tablePrsbRef.value.setData([]);
   }
 }
@@ -364,7 +400,7 @@ function handleRoleRowDeselected(role) {
  * 
  */
 async function onTableRolesReady() {
-  reloadTableRoles()
+  reloadTableRoles();
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -376,7 +412,7 @@ async function onTableRolesReady() {
  */
 async function reloadTableRes() {
   const _data = await $fetch('/api/resources');
-  tableResRef.value.setData(_data)
+  tableResRef.value.setData(_data);
 }
 
 /**
@@ -386,6 +422,7 @@ async function reloadTableRes() {
 function handleResRowSelected(res) {
   if (res) {
     mRes.id = res.id;
+    mRes.resource = res.resource;
   }
 }
 
@@ -396,6 +433,7 @@ function handleResRowSelected(res) {
 function handleResRowDeselected(res) {
   if (res) {
     mRes.id = null;
+    mRes.resource = '';
   }
 }
 
@@ -403,7 +441,7 @@ function handleResRowDeselected(res) {
  * 
  */
 async function onTableResReady() {
-  reloadTableRes()
+  reloadTableRes();
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -414,8 +452,8 @@ async function onTableResReady() {
  * 
  */
 async function reloadTablePrsb() {
-  const _data = []
-  tableResRef.value.setData(_data)
+  const _data = [];
+  tablePrsbRef.value.setData(_data);
 }
 
 /**
@@ -427,9 +465,6 @@ function handlePrsbRowSelected(permission) {
     Object.assign(mPrsb, permission);
 
     tableResRef.value.deselectAll();
-
-    // TODO: ...
-    console.log(permission)
   }
 }
 
@@ -442,9 +477,6 @@ function handlePrsbRowDeselected(permission) {
     resetModelPrsb();
 
     tableResRef.value.deselectAll();
-
-    // TODO: ...
-    console.log(permission)
   }
 }
 
@@ -452,20 +484,23 @@ function handlePrsbRowDeselected(permission) {
  * 
  */
 async function onTablePrsbReady() {
-  reloadTablePrsb()
+  reloadTablePrsb();
 }
 
 /**
- * @param id 
+ * @param role_id 
+ * @param resource_id 
  * @param deleted_at 
  */
-async function alterPermission(id, deleted_at) {
+async function alterPermission(role_id, resource_id, deleted_at) {
   try {
+    mPrsb.modified_by = user.username;
     const statusTo = deleted_at ? 'Y' : 'N';
+    const _r = await $fetch(`/api/permissions/${role_id}/alter`, { method: 'POST', body: { status: statusTo, ...mPrsb } })
 
-    // TODO: ...
+    reloadTablePrsb();
   } catch (err) {
-    showToast(`變更失敗: ${err}`, 'danger')
+    showToast(`變更失敗: ${err}`, 'danger');
   }
 }
 
