@@ -4,7 +4,7 @@ import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { del } from '../../../dal/permissions.js'
+import { create } from '../../../dal/permissions.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
@@ -24,5 +24,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: '缺少 resource_id' })
   }
 
-  throw createError({ statusCode: 501, statusMessage: 'Not implemented' });
+  return await create(role_id, resource_id, body);
 })

@@ -12,13 +12,14 @@ const pool = usePgPool();
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @param {object} input 
  * @param {string} input.created_by 
- * @param {string} input.role_id 
  * @param {string} input.resource_id 
  * @returns 
  */
-export async function create(input) {
+export async function create(role_id, resource_id, input) {
   throw new Error('Not implemented');
 }
 
@@ -40,7 +41,7 @@ export async function getRolePermissions(role_id) {
 }
 
 /**
- * @param {string} role_id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
  * @param {string} resource_id (UUIDv1)
  * @param {object} input 
  * @returns 
@@ -50,7 +51,7 @@ export async function update(role_id, resource_id,  input) {
 }
 
 /**
- * @param {string} role_id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
  * @param {string} resource_id (UUIDv1)
  * @param {Object} input 
  * @returns 
@@ -71,7 +72,7 @@ export async function enable(role_id, resource_id, input) {
 }
 
 /**
- * @param {string} role_id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
  * @param {string} resource_id (UUIDv1)
  * @param {Object} input 
  * @returns 
@@ -92,7 +93,7 @@ export async function disable(role_id, resource_id, input) {
 }
 
 /**
- * @param {string} role_id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
  * @param {string} resource_id (UUIDv1)
  * @returns 
  */

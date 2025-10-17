@@ -330,20 +330,21 @@ function resetFormPermission() {
  * 
  */
 async function addPermission() {
-  if (!isUUIDv1(mRole.id) || !isUUIDv1(mRes.id)) showToast(`請選擇好角色與資源`, 'danger');
+  if (!isUUIDv1(mRole.id) || !isUUIDv1(mRes.id)) { showToast(`請選擇好角色與資源`, 'danger'); return; }
 
   try {
-      mPrsb.modified_by = user.username;
-      mPrsb.action = bitValue.value;
+    mPrsb.modified_by = user.username;
+    mPrsb.action = bitValue.value;
 
     if (mPrsb.role_id) {
       const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 更新成功`, 'success');
     } else {
       mPrsb.created_by = user.username;
+      mPrsb.role_id = mRole.id;
       mPrsb.resource_id = mRes.id;
 
-      const _r = await $fetch(`/api/permissions/${mRole.id}`, { method: 'POST', body: { ...mPrsb } });
+      const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'POST', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 新增成功`, 'success');
     }
 
