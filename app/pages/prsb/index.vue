@@ -332,11 +332,13 @@ function resetFormPermission() {
 async function addPermission() {
   if (!isUUIDv1(mRole.id) || !isUUIDv1(mRes.id)) { showToast(`請選擇好角色與資源`, 'danger'); return; }
 
+  // TODO: 多Key下寫入與更新的區分
+
   try {
     mPrsb.modified_by = user.username;
     mPrsb.action = bitValue.value;
 
-    if (mPrsb.role_id) {
+    if (mPrsb.role_id && mPrsb.resource_id) {
       const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 更新成功`, 'success');
     } else {
@@ -348,8 +350,15 @@ async function addPermission() {
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 新增成功`, 'success');
     }
 
-    resetFormPermission();
-    reloadTablePrsb();
+    // 不清除tableRolesRef，故要維持原來Role選擇的資料
+    resetModelPrsb(); mPrsb.role_id = mRole.id;
+
+    tableResRef.value.deselectAll();
+    tablePrsbRef.value.deselectAll();
+
+    setPermissionOptions();
+  
+    reloadTablePrsb(mRole.id);
   } catch (error) {
     showToast(`異動失敗: ${error}`, 'danger');
   }
@@ -394,6 +403,8 @@ function handleRoleRowDeselected(role) {
     tablePrsbRef.value.deselectAll();
 
     tablePrsbRef.value.setData([]);
+
+    resetModelPrsb();
   }
 }
 
@@ -450,10 +461,10 @@ async function onTableResReady() {
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * 
+ * @param {string} role_id (UUIDv1)
  */
-async function reloadTablePrsb() {
-  const _data = [];
+async function reloadTablePrsb(role_id) {
+  const _data = isUUIDv1(role_id) ? await $fetch(`/api/permissions/${role_id}`) : [];
   tablePrsbRef.value.setData(_data);
 }
 
@@ -464,6 +475,7 @@ async function reloadTablePrsb() {
 function handlePrsbRowSelected(permission) {
   if (permission) {
     Object.assign(mPrsb, permission);
+    setPermissionOptions(mPrsb.action);
 
     tableResRef.value.deselectAll();
   }
@@ -475,8 +487,7 @@ function handlePrsbRowSelected(permission) {
  */
 function handlePrsbRowDeselected(permission) {
   if (permission) {
-    resetModelPrsb();
-
+    setPermissionOptions();
     tableResRef.value.deselectAll();
   }
 }
@@ -499,7 +510,7 @@ async function alterPermission(role_id, resource_id, deleted_at) {
     const statusTo = deleted_at ? 'Y' : 'N';
     const _r = await $fetch(`/api/permissions/${role_id}/alter`, { method: 'POST', body: { status: statusTo, ...mPrsb } })
 
-    reloadTablePrsb();
+    reloadTablePrsb(role_id);
   } catch (err) {
     showToast(`變更失敗: ${err}`, 'danger');
   }

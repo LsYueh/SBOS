@@ -16,11 +16,18 @@ const pool = usePgPool();
  * @param {string} resource_id (UUIDv1)
  * @param {object} input 
  * @param {string} input.created_by 
- * @param {string} input.resource_id 
  * @returns 
  */
 export async function create(role_id, resource_id, input) {
-  throw new Error('Not implemented');
+  const {
+    created_by, modified_by, action
+  } = input;
+
+  const res = await pool.query(`
+    INSERT INTO sbos.permissions (created_by, modified_by, role_id, resource_id, action) VALUES ($1, $2, $3, $4, $5) RETURNING role_id 
+  `, [created_by, modified_by, role_id, resource_id, action]);
+
+  return res.rows[0].role_id;
 }
 
 /**
@@ -37,7 +44,7 @@ export async function getRolePermissions(role_id) {
     ORDER BY resource asc
   `, [role_id]);
 
-  return res.rows ?? []
+  return res.rows ?? [];
 }
 
 /**
