@@ -54,7 +54,18 @@ export async function getRolePermissions(role_id) {
  * @returns 
  */
 export async function update(role_id, resource_id,  input) {
-  throw new Error('Not implemented');
+  const {
+    modified_by, action
+  } = input
+
+  const res = await pool.query(`
+    UPDATE sbos.permissions
+    SET modified_by = $3, updated_at = now(), "action" = $4
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
+    RETURNING role_id
+  `, [role_id, resource_id, modified_by, action]);
+
+  return res.rows[0].role_id;
 }
 
 /**
@@ -68,14 +79,14 @@ export async function enable(role_id, resource_id, input) {
 
   const query = `
     UPDATE sbos.permissions 
-    SET modified_by = $1, updated_at = now(), deleted_at = NULL
-    WHERE role_id=$2::uuid AND resource_id=$3::uuid
+    SET modified_by = $3, updated_at = now(), deleted_at = NULL
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
     RETURNING role_id
   `;
 
-  const res = await pool.query(query, [modified_by, role_id, resource_id]);
+  const res = await pool.query(query, [role_id, resource_id, modified_by]);
 
-  return res.rows[0]?.role_id ?? null;
+  return res.rows[0].role_id;
 }
 
 /**
@@ -89,14 +100,14 @@ export async function disable(role_id, resource_id, input) {
 
   const query = `
     UPDATE sbos.permissions 
-    SET modified_by = $1, updated_at = now(), deleted_at = now() 
-    WHERE role_id=$2::uuid AND resource_id=$3::uuid
+    SET modified_by = $3, updated_at = now(), deleted_at = now() 
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
     RETURNING role_id
   `;
 
-  const res = await pool.query(query, [modified_by, role_id, resource_id]);
+  const res = await pool.query(query, [role_id, resource_id, modified_by]);
 
-  return res.rows[0]?.role_id ?? null;
+  return res.rows[0].role_id;
 }
 
 /**

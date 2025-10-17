@@ -69,7 +69,9 @@
 
         <div class="col-auto">
           <div class="d-grid mx-auto h-100">
-            <button type="submit" class="btn btn-success" title="儲存" data-bs-toggle="tooltip"><i class="fa-solid fa-square-check"/></button>
+            <button ref="submitBtnRef" type="submit" class="btn btn-success" :title="submitBtnTitle" data-bs-toggle="tooltip">
+              <i :class="submitIconClass" />
+            </button>
           </div>
         </div>
       </div>
@@ -261,6 +263,34 @@ function setPermissionOptions(bitValue = 0) {
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
+ * Variables
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**  */
+const submitBtnRef = ref(null);
+
+/**
+ * PRSB的執行狀態
+ */
+const PRSB_CRUD = ref(null);
+
+// 根據 mode 動態設定 icon
+const submitIconClass = computed(() => {
+  if (PRSB_CRUD.value === 'C') return 'fa-solid fa-square-plus';
+  if (PRSB_CRUD.value === 'U') return 'fa-solid fa-pen-to-square';
+  return 'fa-solid fa-square';
+});
+
+const submitBtnTitle = ref('儲存');
+
+// TODO: 根據 PRSB_CRUD 動態設定 tooltips 的 title
+// const submitBtnTitle = computed(() => {
+//   if (PRSB_CRUD.value === 'C') return '新增'
+//   if (PRSB_CRUD.value === 'U') return '修改'
+//   return '--' // 預設標題
+// });
+
+/**------+---------+---------+---------+---------+---------+---------+----------
  * Toast
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
@@ -330,24 +360,25 @@ function resetFormPermission() {
  * 
  */
 async function addPermission() {
-  if (!isUUIDv1(mRole.id) || !isUUIDv1(mRes.id)) { showToast(`請選擇好角色與資源`, 'danger'); return; }
-
-  // TODO: 多Key下寫入與更新的區分
+  if (!isUUIDv1(mRole.id)) { showToast(`請選擇好角色`, 'danger'); return; }
+  if (!isUUIDv1(mRes.id) ) { showToast(`請選擇好資源`, 'danger'); return; }
 
   try {
     mPrsb.modified_by = user.username;
-    mPrsb.action = bitValue.value;
+    mPrsb.role_id     = mRole.id;
+    mPrsb.resource_id = mRes.id;
+    mPrsb.action      = bitValue.value;
 
-    if (mPrsb.role_id && mPrsb.resource_id) {
+    /*--*/ if (PRSB_CRUD.value === 'U') {
       const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 更新成功`, 'success');
-    } else {
+    } else if (PRSB_CRUD.value === 'C') {
       mPrsb.created_by = user.username;
-      mPrsb.role_id = mRole.id;
-      mPrsb.resource_id = mRes.id;
 
       const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'POST', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 新增成功`, 'success');
+    } else {
+      throw new Error(`未知的PRSB操作模式: '${PRSB_CRUD.value}'`);
     }
 
     // 不清除tableRolesRef，故要維持原來Role選擇的資料
@@ -433,9 +464,13 @@ async function reloadTableRes() {
  */
 function handleResRowSelected(res) {
   if (res) {
+    tablePrsbRef.value.deselectAll();
+    
     mRes.id = res.id;
     mRes.resource = res.resource;
   }
+
+  PRSB_CRUD.value = 'C';
 }
 
 /**
@@ -443,6 +478,8 @@ function handleResRowSelected(res) {
  * @param res 
  */
 function handleResRowDeselected(res) {
+  PRSB_CRUD.value = null;
+
   if (res) {
     mRes.id = null;
     mRes.resource = '';
@@ -474,11 +511,15 @@ async function reloadTablePrsb(role_id) {
  */
 function handlePrsbRowSelected(permission) {
   if (permission) {
+    tableResRef.value.deselectAll();
+
+    mRes.id = permission.resource_id;
+
     Object.assign(mPrsb, permission);
     setPermissionOptions(mPrsb.action);
-
-    tableResRef.value.deselectAll();
   }
+
+  PRSB_CRUD.value = 'U';
 }
 
 /**
@@ -486,9 +527,10 @@ function handlePrsbRowSelected(permission) {
  * @param permission 
  */
 function handlePrsbRowDeselected(permission) {
+  PRSB_CRUD.value = null;
+
   if (permission) {
     setPermissionOptions();
-    tableResRef.value.deselectAll();
   }
 }
 
