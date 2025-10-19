@@ -201,7 +201,7 @@ const tablePrsb = {
     { title: '權限', field: 'action', hozAlign: 'right', headerSort: true,
       formatter: (cell) => {
         const action = cell.getValue();
-        return action;
+        return getSelectedPermissions(action, options);
       },
     },
     {
