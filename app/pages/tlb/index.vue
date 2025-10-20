@@ -119,34 +119,34 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
-import View from '~/components/View.vue'
+import { reactive, ref, onMounted } from 'vue';
+import View from '~/components/View.vue';
 const { $bootstrap } = useNuxtApp();
 
-const user = useUserStore()
+const user = useUserStore();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Page Meta
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 definePageMeta({
-  headerTitle: '使用者設定 (TLB)'
-})
+  headerTitle: '使用者設定 (TLB)',
+});
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Toast
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-const toastRef = ref(null)
-let toastInstance = null
-const toastMessage = ref('')
+const toastRef = ref(null);
+let toastInstance = null;
+const toastMessage = ref('');
 
 const showToast = (msg, type = 'primary') => {
   toastMessage.value = msg
   toastRef.value.className = `toast align-items-center text-bg-${type} border-0`
   toastInstance = toastInstance || new $bootstrap.Toast(toastRef.value, { delay: 2000 })
   toastInstance.show()
-}
+};
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tooltips
@@ -156,31 +156,31 @@ const showToast = (msg, type = 'primary') => {
  * Initialize tooltips
  */
 function initBs5Tooltips() {
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl))
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new $bootstrap.Tooltip(tooltipTriggerEl));
 
-  return tooltipList
+  return tooltipList;
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Modal
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-let userModal = null
-const userModalRef = ref(null)
+let userModal = null;
+const userModalRef = ref(null);
 
-let userRolesModal = null
-const userRolesModalRef = ref(null)
+let userRolesModal = null;
+const userRolesModalRef = ref(null);
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** 角色清單 (from API) */
-const rolesFromApi = ref([])
+const rolesFromApi = ref([]);
 
-const userIsDisabled = computed(() => formUser.account === user.username)
-const roleIsDisabled = computed(() => formUserRoles._account === user.username)
+const userIsDisabled = computed(() => formUser.account === user.username);
+const roleIsDisabled = computed(() => formUserRoles._account === user.username);
 
 const formUser = reactive({
   created_by: '',
@@ -193,7 +193,7 @@ const formUser = reactive({
   account: '',
   name: '',
   description: '',
-})
+});
 
 const formUserRoles = reactive({
   user_id: null,
@@ -201,7 +201,7 @@ const formUserRoles = reactive({
 
   selectedRoleTitle: 'user',
   _account: '',
-})
+});
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Tabulator
@@ -226,52 +226,52 @@ const columns = [
   { title: '更新時間', field: 'updated_at', headerHozAlign: 'center', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
   { title: '角色'    , field: 'role_count', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.5,
     formatter: (cell) => {
-      const view = cell.getData()
-      const roleCount = view.role_count
+      const view = cell.getData();
+      const roleCount = view.role_count;
 
-      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:context-menu;" />`
+      return `<i class="fa-solid ${roleCount > 0 ? 'fa-users' : 'fa-users-slash'} text-primary" style="cursor:context-menu;" />`;
     },
     cellClick: async (e, cell) => {
-      const view = cell.getData()
-      openUserRolesModal(view)
+      const view = cell.getData();
+      openUserRolesModal(view);
     },
   },
   {
     title: '狀態'    , field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
     formatter: (cell) => {
-      const view = cell.getData()
-      const deletedAt = view.deleted_at
-      const _roleIsDisabled = (view.account === user.username)
+      const view = cell.getData();
+      const deletedAt = view.deleted_at;
+      const _roleIsDisabled = (view.account === user.username);
 
-      const opacity = 0.5
+      const opacity = 0.5;
 
       if (deletedAt) {
-        cell.getRow().getElement().style.opacity = opacity
+        cell.getRow().getElement().style.opacity = opacity;
       } else {
         // 不可以自己刪除自己
-        if (_roleIsDisabled) cell.getElement().style.opacity = opacity
+        if (_roleIsDisabled) cell.getElement().style.opacity = opacity;
       }
 
       const textColor = deletedAt ? 'text-danger' : 'text-success';
       
-      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'context-menu'};" />`
+      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:${_roleIsDisabled ? 'not-allowed' : 'context-menu'};" />`;
     },
     cellClick: async (e, cell) => {
-      const view = cell.getData()
-      const deletedAt = view.deleted_at
-      const _roleIsDisabled = (view.account === user.username)
+      const view = cell.getData();
+      const deletedAt = view.deleted_at;
+      const _roleIsDisabled = (view.account === user.username);
 
       // 不可以自己刪除自己
-      if (_roleIsDisabled) return 
+      if (_roleIsDisabled) return;
 
       // 重新啟用的時候不警告，不然太擾民了
-      if (!deletedAt && !confirm('確定要停用這個使用者嗎？')) return
+      if (!deletedAt && !confirm('確定要停用這個使用者嗎？')) return;
 
       // 淡出效果
       // cell.getRow().getElement().style.transition = "opacity 0.5s";
       // cell.getRow().getElement().style.opacity = 0;
 
-      await alterUser(view.id, view.deleted_at)
+      await alterUser(view.id, view.deleted_at);
     },
   },
 ]
@@ -283,17 +283,17 @@ const viewUsers = ref(null)
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 onMounted(async () => {
-  initBs5Tooltips()
+  initBs5Tooltips();
 
   if (userModalRef.value) {
-    userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' })
+    userModal = new $bootstrap.Modal(userModalRef.value, { backdrop: 'static' });
   }
 
   if (userRolesModalRef.value) {
-    userRolesModal = new $bootstrap.Modal(userRolesModalRef.value, { backdrop: 'static' })
+    userRolesModal = new $bootstrap.Modal(userRolesModalRef.value, { backdrop: 'static' });
   }
 
-  rolesFromApi.value = await $fetch('/api/roles')
+  rolesFromApi.value = await $fetch('/api/roles');
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -305,11 +305,11 @@ onMounted(async () => {
  */
 function openUserModal(user = null) {
   if (user) {
-    Object.assign(formUser, user)
+    Object.assign(formUser, user);
   } else {
-    resetFormUser()
+    resetFormUser();
   }
-  userModal.show()
+  userModal.show();
 }
 
 /**
@@ -317,23 +317,23 @@ function openUserModal(user = null) {
  */
 async function saveUser() {
   try {
-    formUser.modified_by = user.username
+    formUser.modified_by = user.username;
 
     if (formUser.id) {
-      const _r = await $fetch(`/api/users/${formUser.id}`, { method: 'PUT', body: { ...formUser } })
-      showToast('使用者更新成功', 'success')
+      const _r = await $fetch(`/api/users/${formUser.id}`, { method: 'PUT', body: { ...formUser } });
+      showToast('使用者更新成功', 'success');
     } else {
-      formUser.created_by = user.username
+      formUser.created_by = user.username;
 
-      const _r = await $fetch('/api/users', { method: 'POST', body: { ...formUser } })
-      showToast('使用者新增成功', 'success')
+      const _r = await $fetch('/api/users', { method: 'POST', body: { ...formUser } });
+      showToast('使用者新增成功', 'success');
     }
 
-    resetFormUser()
-    viewUsers.value.refresh()
-    userModal.hide()
+    resetFormUser();
+    viewUsers.value.refresh();
+    userModal.hide();
   } catch (err) {
-    showToast(`儲存失敗: ${err}`, 'danger')
+    showToast(`儲存失敗: ${err}`, 'danger');
   }
 }
 
@@ -343,12 +343,12 @@ async function saveUser() {
  */
 async function alterUser(id, deleted_at) {
   try {
-    formUser.modified_by = user.username
-    const statusTo = deleted_at ? 'Y' : 'N'
-    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formUser } })
-    viewUsers.value.refresh()
+    formUser.modified_by = user.username;
+    const statusTo = deleted_at ? 'Y' : 'N';
+    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formUser } });
+    viewUsers.value.refresh();
   } catch (err) {
-    showToast(`變更失敗: ${err}`, 'danger')
+    showToast(`變更失敗: ${err}`, 'danger');
   }
 }
 
@@ -356,16 +356,16 @@ async function alterUser(id, deleted_at) {
  * 
  */
 function resetFormUser() {
-  formUser.created_by = ''
-  formUser.created_at = null
-  formUser.modified_by = ''
-  formUser.updated_at = null
-  formUser.deleted_at = null
+  formUser.created_by  = '';
+  formUser.created_at  = null;
+  formUser.modified_by = '';
+  formUser.updated_at  = null;
+  formUser.deleted_at  = null;
 
-  formUser.id = null
-  formUser.account = ''
-  formUser.name = ''
-  formUser.description = ''
+  formUser.id      = null;
+  formUser.account = '';
+  formUser.name    = '';
+  formUser.description = '';
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -376,16 +376,16 @@ function resetFormUser() {
  * @param user 
  */
 async function openUserRolesModal(user = null) {
-  if (!user?.id) alert('缺少使用者資料')
+  if (!user?.id) alert('缺少使用者資料');
 
-  formUserRoles.user_id = user.id 
-  formUserRoles._account = user.account
+  formUserRoles.user_id = user.id ;
+  formUserRoles._account = user.account;
 
   try {
-    formUserRoles.roles = await $fetch(`/api/users/${user.id}/roles`)
-    userRolesModal.show()
+    formUserRoles.roles = await $fetch(`/api/users/${user.id}/roles`);
+    userRolesModal.show();
   } catch (err) {
-    showToast(`角色讀取失敗: ${err}`, 'danger')
+    showToast(`角色讀取失敗: ${err}`, 'danger');
   }
 }
 
@@ -393,15 +393,15 @@ async function openUserRolesModal(user = null) {
  * 
  */
 async function upsertUserRoles() {
-  const id = formUserRoles.user_id
+  const id = formUserRoles.user_id;
 
   try {
-    const res = await $fetch(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] })
-    showToast(`角色更新成功 ${res.affectedRows} 筆`, 'success')
-    formUserRoles.roles = await $fetch(`/api/users/${id}/roles`)
-    viewUsers.value.refresh()
+    const res = await $fetch(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] });
+    showToast(`角色更新成功 ${res.affectedRows} 筆`, 'success');
+    formUserRoles.roles = await $fetch(`/api/users/${id}/roles`);
+    viewUsers.value.refresh();
   } catch (err) {
-    showToast(`角色儲存失敗: ${err}`, 'danger')
+    showToast(`角色儲存失敗: ${err}`, 'danger');
   }
 }
 
@@ -409,33 +409,30 @@ async function upsertUserRoles() {
  * 
  */
 function resetFormUserRoles() {
-  formUserRoles.user_id = null
-  formUserRoles.roles = []
+  formUserRoles.user_id = null;
+  formUserRoles.roles = [];
 
-  formUserRoles.selectedRoleTitle = 'user'
-  formUserRoles._account = ''
+  formUserRoles.selectedRoleTitle = 'user';
+  formUserRoles._account = '';
 }
 
 /**
  * 新增角色
  */
 function addRole() {
-  const title = formUserRoles.selectedRoleTitle
+  const title = formUserRoles.selectedRoleTitle;
   if (title === '') {
-    showToast('請選擇角色', 'danger')
-    return
+    showToast('請選擇角色', 'danger'); return;
   }
 
   const role = rolesFromApi.value.find((v) => v.title === title)
   if (!role) {
-    showToast(`角色'${title}'不存在於資料庫中`, 'danger')
-    return
+    showToast(`角色'${title}'不存在於資料庫中`, 'danger'); return;
   }
 
   const exists = formUserRoles.roles.some((v) => v.role_title === title)
   if (exists) {
-    showToast('角色已重複', 'danger')
-    return
+    showToast('角色已重複', 'danger'); return;
   }
 
   formUserRoles.roles.push({
@@ -447,7 +444,7 @@ function addRole() {
     role_id: role.id,
     role_title: title,
     role_description: role.description,
-  })
+  });
 }
 
 /**
@@ -455,7 +452,7 @@ function addRole() {
  * @param index 
  */
 function removeRole(index) {
-  formUserRoles.roles.splice(index, 1)
+  formUserRoles.roles.splice(index, 1);
 }
 
 </script>
