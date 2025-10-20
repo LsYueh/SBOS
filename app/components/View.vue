@@ -29,7 +29,7 @@ onMounted(() => {
   const headers = user.token ? {
     'Authorization': `Bearer ${user.token}`,
     'Content-Type': 'application/json'
-  } : {}
+  } : {};
   
   tabulatorInstance = new Tabulator(table.value, {
     ajaxURL: props.ajaxUrl,

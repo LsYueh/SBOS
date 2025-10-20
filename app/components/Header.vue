@@ -62,61 +62,73 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-const { $bootstrap } = useNuxtApp();
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+const { $api, $bootstrap } = useNuxtApp();
 
-const route = useRoute()
-const router = useRouter()
-const user = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const user = useUserStore();
 
-const logoutBtn = ref(null)
-let tooltipInstance = null
+const logoutBtn = ref(null);
+let tooltipInstance = null;
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Menu
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 // 假設登入者有多角色（實務上應該從登入 API 或 Pinia/Vuex state 拿）
-const currentUserRoles = ['admin']
+const currentUserRoles = ['admin'];
 
-// 從 API 抓選單
-const { data: menuGroups } = await useAPI('/api/menu');
+// 選單
+const menuGroups = ref(null);
 
 // 判斷是否允許顯示某個項目
 function canAccess(itemRoles, userRoles) {
-  return itemRoles.some(role => userRoles.includes(role))
+  return itemRoles.some(role => userRoles.includes(role));
 }
 
 // 根據角色過濾
 const filteredMenuGroups = computed(() => {
-  if (!menuGroups.value) return []
+  if (!menuGroups.value) return [];
   return menuGroups.value
     .map(group => ({
       ...group,
       items: group.items.filter(item => canAccess(item.roles, currentUserRoles))
     }))
-    .filter(group => group.items.length > 0)
+    .filter(group => group.items.length > 0);
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 時鐘
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-const clock = ref('')
-let timer = null
+const clock = ref('');
+let timer = null;
 function updateClock() {
   const now = new Date()
   clock.value = now.toLocaleTimeString('zh-TW', { hour12: true })
 }
 
 /**------+---------+---------+---------+---------+---------+---------+----------
+ * Events - Cookie
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+const userCookie = useCookie('user')
+watch(userCookie, async(cookie) => {
+  // 監聽`登入/登出`時的cookie變化來更新選單
+  if (cookie) {
+    menuGroups.value = await $api('/api/menu');
+  }
+})
+
+/**------+---------+---------+---------+---------+---------+---------+----------
  * Events
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 function handleLogout() {
-  user.logout()
-  router.push('/')
+  user.logout();
+  router.push('/');
 }
 
 watch(logoutBtn, (el) => {
@@ -126,21 +138,20 @@ watch(logoutBtn, (el) => {
   } else {
     // 元素消失時清掉Tooltip實例
     if (tooltipInstance) {
-      tooltipInstance.hide()
       tooltipInstance.dispose()
       tooltipInstance = null
     }
   }
-})
+});
 
 onMounted(() => {
   updateClock()
   timer = setInterval(updateClock, 500)
-})
+});
 
 onUnmounted(() => {
   clearInterval(timer)
-})
+});
 
 </script>
 

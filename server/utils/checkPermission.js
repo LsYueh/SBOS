@@ -2,7 +2,7 @@ import { db } from './db';
 
 /**
  * 
- * @param {string} userId 
+ * @param {string} userId username/user-id
  * @param {string} resource 
  * @param {string} action 
  * @returns 
