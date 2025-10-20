@@ -81,7 +81,7 @@ let tooltipInstance = null
 const currentUserRoles = ['admin']
 
 // 從 API 抓選單
-const { data: menuGroups } = await useFetch('/api/menu')
+const { data: menuGroups } = await useAPI('/api/menu');
 
 // 判斷是否允許顯示某個項目
 function canAccess(itemRoles, userRoles) {

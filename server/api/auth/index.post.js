@@ -1,5 +1,7 @@
-import { defineEventHandler, readBody, createError } from 'h3'
-import { firstUseCheck, checkIfAnUserExists } from '../dal/users.js'
+import { defineEventHandler, readBody, createError } from 'h3';
+import jwt from 'jsonwebtoken';
+
+import { firstUseCheck, checkIfAnUserExists } from '../../dal/users.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
@@ -20,24 +22,40 @@ async function userValidation(account, password) {
   return true
 }
 
+/**
+ * @param {object} payload JWT Payload
+ * @returns 
+ */
+function tokenGen(payload) {
+  // eslint-disable-next-line no-undef
+  const config = useRuntimeConfig()
+
+  const token = jwt.sign(payload, config.jwtSecret, {
+    expiresIn: '1d',
+  });
+
+  return token;
+}
+
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { username, password } = body || {}
+  const { username, password } = body || {};
 
   if (!username || !password) {
-    throw createError({ statusCode: 400, statusMessage: 'username and password are required' })
+    throw createError({ statusCode: 400, statusMessage: 'username and password are required' });
   }
 
-  const isValid = await userValidation(username, password)
+  const isValid = await userValidation(username, password);
 
   if (!isValid) {
-    throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' })
+    throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' });
   }
 
-  // TODO: token
-  return { token: 'abcd1234' }
+  const token = tokenGen({ username });
+
+  return { token };
 })

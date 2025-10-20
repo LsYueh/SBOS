@@ -32,12 +32,22 @@ const gitHash = (() => {
  * @returns 
  */
 function serverSideConfigFactory() {
-  const _config = {
+  // JWT
+  const jwt = {
+    jwtSecret: process.env.JWT_SECRET || 'default_secret',
+  };
+
+  // POSTGRES
+  const postgres = {
     dbHost: process.env.POSTGRES_HOST     || 'localhost',
     dbPort: process.env.POSTGRES_DB_PORT  ? Number(process.env.DB_PORT) : 5432,
     dbUser: process.env.POSTGRES_USER     || 'sbos-db-user',
     dbPass: process.env.POSTGRES_PASSWORD || 'db-passwd',
     dbName: process.env.POSTGRES_DB       || 'postgres',
+  };
+
+  const _config = {
+    ...jwt, ...postgres,
   }
 
   return _config
