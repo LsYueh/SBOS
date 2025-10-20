@@ -80,8 +80,8 @@ let tooltipInstance = null;
 // 假設登入者有多角色（實務上應該從登入 API 或 Pinia/Vuex state 拿）
 const currentUserRoles = ['admin'];
 
-// 選單
-const menuGroups = ref(null);
+// 從 API 抓選單做初始化
+const { data: menuGroups } = await useAPI('/api/menu');
 
 // 判斷是否允許顯示某個項目
 function canAccess(itemRoles, userRoles) {
