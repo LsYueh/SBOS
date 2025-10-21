@@ -17,7 +17,7 @@ async function userValidation(account, password) {
 
   if (!await checkIfAnUserExists({ account })) throw createError({ statusCode: 401, statusMessage: '使用者不存在' })
 
-  // TODO: LDAP / SSO / OAuth2 / SAML / OIDC
+  // 可自行實作: LDAP / SSO / OAuth2 / SAML / OIDC
 
   return true
 }
