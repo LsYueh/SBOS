@@ -62,6 +62,17 @@ export const useUserStore = defineStore('user', {
 
         this.isLoggedIn = true
       }
+    },
+
+    /**
+     * 
+     * @param {string} resource 
+     * @param {string} action 
+     * @returns 
+     */
+    hasPermission(resource, action = 'view') {
+      // TODO: ...
+      return true;
     }
   }
 })
