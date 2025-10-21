@@ -109,8 +109,8 @@
 
 <script setup>
 import { reactive, ref, onMounted  } from 'vue';
-const { $bootstrap } = useNuxtApp();
 
+const { $api, $bootstrap } = useNuxtApp();
 const user = useUserStore();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -370,12 +370,12 @@ async function addPermission() {
     mPrsb.action      = bitValue.value;
 
     /*--*/ if (PRSB_CRUD.value === 'U') {
-      const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
+      const _r = await $api(`/api/permissions/${mPrsb.role_id}`, { method: 'PUT', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 更新成功`, 'success');
     } else if (PRSB_CRUD.value === 'C') {
       mPrsb.created_by = user.username;
 
-      const _r = await $fetch(`/api/permissions/${mPrsb.role_id}`, { method: 'POST', body: { ...mPrsb } });
+      const _r = await $api(`/api/permissions/${mPrsb.role_id}`, { method: 'POST', body: { ...mPrsb } });
       showToast(`角色:'${mRole.description}' URL:'${mRes.resource}' 新增成功`, 'success');
     } else {
       throw new Error(`未知的PRSB操作模式: '${PRSB_CRUD.value}'`);
@@ -403,7 +403,7 @@ async function addPermission() {
  * 
  */
 async function reloadTableRoles() {
-  const _data = await $fetch('/api/roles');
+  const _data = await $api('/api/roles');
   tableRolesRef.value.setData(_data);
 }
 
@@ -416,7 +416,7 @@ async function handleRoleRowSelected(role) {
     mRole.id = role.id;
     mRole.description = role.description;
 
-    const _data = await $fetch(`/api/permissions/${role.id}`);
+    const _data = await $api(`/api/permissions/${role.id}`);
     tablePrsbRef.value.setData(_data);
   }
 }
@@ -454,7 +454,7 @@ async function onTableRolesReady() {
  * 
  */
 async function reloadTableRes() {
-  const _data = await $fetch('/api/resources');
+  const _data = await $api('/api/resources');
   tableResRef.value.setData(_data);
 }
 
@@ -501,7 +501,7 @@ async function onTableResReady() {
  * @param {string} role_id (UUIDv1)
  */
 async function reloadTablePrsb(role_id) {
-  const _data = isUUIDv1(role_id) ? await $fetch(`/api/permissions/${role_id}`) : [];
+  const _data = isUUIDv1(role_id) ? await $api(`/api/permissions/${role_id}`) : [];
   tablePrsbRef.value.setData(_data);
 }
 
@@ -550,7 +550,7 @@ async function alterPermission(role_id, resource_id, deleted_at) {
   try {
     mPrsb.modified_by = user.username;
     const statusTo = deleted_at ? 'Y' : 'N';
-    const _r = await $fetch(`/api/permissions/${role_id}/alter`, { method: 'POST', body: { status: statusTo, ...mPrsb } })
+    const _r = await $api(`/api/permissions/${role_id}/alter`, { method: 'POST', body: { status: statusTo, ...mPrsb } })
 
     reloadTablePrsb(role_id);
   } catch (err) {

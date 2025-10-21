@@ -121,8 +121,8 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
 import View from '~/components/View.vue';
-const { $bootstrap } = useNuxtApp();
 
+const { $api, $bootstrap } = useNuxtApp();
 const user = useUserStore();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -293,7 +293,7 @@ onMounted(async () => {
     userRolesModal = new $bootstrap.Modal(userRolesModalRef.value, { backdrop: 'static' });
   }
 
-  rolesFromApi.value = await $fetch('/api/roles');
+  rolesFromApi.value = await $api('/api/roles');
 })
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -320,12 +320,12 @@ async function saveUser() {
     formUser.modified_by = user.username;
 
     if (formUser.id) {
-      const _r = await $fetch(`/api/users/${formUser.id}`, { method: 'PUT', body: { ...formUser } });
+      const _r = await $api(`/api/users/${formUser.id}`, { method: 'PUT', body: { ...formUser } });
       showToast('使用者更新成功', 'success');
     } else {
       formUser.created_by = user.username;
 
-      const _r = await $fetch('/api/users', { method: 'POST', body: { ...formUser } });
+      const _r = await $api('/api/users', { method: 'POST', body: { ...formUser } });
       showToast('使用者新增成功', 'success');
     }
 
@@ -345,7 +345,7 @@ async function alterUser(id, deleted_at) {
   try {
     formUser.modified_by = user.username;
     const statusTo = deleted_at ? 'Y' : 'N';
-    const _r = await $fetch(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formUser } });
+    const _r = await $api(`/api/users/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formUser } });
     viewUsers.value.refresh();
   } catch (err) {
     showToast(`變更失敗: ${err}`, 'danger');
@@ -382,7 +382,7 @@ async function openUserRolesModal(user = null) {
   formUserRoles._account = user.account;
 
   try {
-    formUserRoles.roles = await $fetch(`/api/users/${user.id}/roles`);
+    formUserRoles.roles = await $api(`/api/users/${user.id}/roles`);
     userRolesModal.show();
   } catch (err) {
     showToast(`角色讀取失敗: ${err}`, 'danger');
@@ -396,9 +396,9 @@ async function upsertUserRoles() {
   const id = formUserRoles.user_id;
 
   try {
-    const res = await $fetch(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] });
+    const res = await $api(`/api/users/${id}/roles`, { method: 'POST', body: [ ...formUserRoles.roles ] });
     showToast(`角色更新成功 ${res.affectedRows} 筆`, 'success');
-    formUserRoles.roles = await $fetch(`/api/users/${id}/roles`);
+    formUserRoles.roles = await $api(`/api/users/${id}/roles`);
     viewUsers.value.refresh();
   } catch (err) {
     showToast(`角色儲存失敗: ${err}`, 'danger');

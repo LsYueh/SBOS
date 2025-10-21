@@ -8,27 +8,6 @@ import { checkPermission } from '../../utils/checkPermission.js';
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
- * 驗證JWT
- * @param {import('h3').H3Event} event 
- * @returns 
- */
-function verifyJwtToken(event) {
-  const authHeader = getHeader(event, 'authorization');
-  if (!authHeader) {
-    throw createError({ statusCode: 401, statusMessage: 'No token provided' });
-  }
-
-  const token = authHeader.split(' ')[1]; // 'Bearer xxx'
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
-    return decoded.username;
-  } catch (err) {
-    throw createError({ statusCode: 401, statusMessage: 'Invalid or expired token' });
-  }
-}
-
-/**
  * @param {import('h3').H3Event} event 
  * @returns 
  */

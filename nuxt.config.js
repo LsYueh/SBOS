@@ -86,5 +86,8 @@ export default defineNuxtConfig({
     'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
   ],
 
-  modules: ['@pinia/nuxt']
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/eslint-module',
+  ]
 })
