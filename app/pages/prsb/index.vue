@@ -389,7 +389,9 @@ async function addPermission() {
 
     setPermissionOptions();
   
-    reloadTablePrsb(mRole.id);
+    // UI連動更新
+    const PRSB = await reloadTablePrsb(mRole.id);
+    reloadTableRes(PRSB);
   } catch (error) {
     showToast(`異動失敗: ${error}`, 'danger');
   }
@@ -399,12 +401,13 @@ async function addPermission() {
  * Events : Table Roles
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+const { data: rolesFomeApi } = await useAPI('/api/roles');
+
 /**
  * 
  */
 async function reloadTableRoles() {
-  const _data = await $api('/api/roles');
-  tableRolesRef.value.setData(_data);
+  tableRolesRef.value.setData(rolesFomeApi.value);
 }
 
 /**
@@ -416,8 +419,10 @@ async function handleRoleRowSelected(role) {
     mRole.id = role.id;
     mRole.description = role.description;
 
-    const _data = await $api(`/api/permissions/${role.id}`);
-    tablePrsbRef.value.setData(_data);
+    const PRSB = await $api(`/api/permissions/${role.id}`);
+    tablePrsbRef.value.setData(PRSB);
+
+    reloadTableRes(PRSB);
   }
 }
 
@@ -450,12 +455,20 @@ async function onTableRolesReady() {
  * Events : Table Resources
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
+const { data: resFomeApi } = await useAPI('/api/resources');
+
 /**
- * 
+ * 會根據`permissions`有的`resource_id`來排除輸出結果
+ * @param {object[]} [permissions] 
  */
-async function reloadTableRes() {
-  const _data = await $api('/api/resources');
-  tableResRef.value.setData(_data);
+async function reloadTableRes(permissions = []) {
+  const resources = resFomeApi.value;
+
+  const res = resources.filter(resource =>
+    !permissions.some(permission => permission.resource_id === resource.id)
+  );
+
+  tableResRef.value.setData(res);
 }
 
 /**
@@ -499,10 +512,14 @@ async function onTableResReady() {
 
 /**
  * @param {string} role_id (UUIDv1)
+ * @returns 
  */
 async function reloadTablePrsb(role_id) {
-  const _data = isUUIDv1(role_id) ? await $api(`/api/permissions/${role_id}`) : [];
-  tablePrsbRef.value.setData(_data);
+  const PRSB = isUUIDv1(role_id) ? await $api(`/api/permissions/${role_id}`) : [];
+  tablePrsbRef.value.setData(PRSB);
+
+  // 將最新的permissions傳出去給resources做排除參考用
+  return PRSB;
 }
 
 /**

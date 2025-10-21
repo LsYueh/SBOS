@@ -24,5 +24,7 @@ export function getSelectedPermissions(bitValue, options) {
   // 過濾勾選的 bit 對應之權限名稱
   const permissions = options.filter((_, idx) => (value & (1 << idx)) !== 0);
 
-  return permissions.join('／'); // 文字排版，用全形
+  const str = permissions.join('／').trim(); // 文字排版，用全形
+
+  return (str === '') ? '----' : str;
 }
