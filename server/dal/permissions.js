@@ -123,16 +123,3 @@ export async function del(role_id, resource_id) {
 
   return true;
 }
-
-/**------+---------+---------+---------+---------+---------+---------+----------
- * Exports - 抽象應用功能
----------+---------+---------+---------+---------+---------+---------+--------*/
-
-/**
- * 
- * @param {string} resource URL
- */
-export async function check(resource) {
-  // TODO: ...
-  return true;
-}

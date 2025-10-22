@@ -233,3 +233,26 @@ export async function deleteUser(id) {
   await pool.query(`DELETE FROM sbos.users WHERE id=$1::uuid`, [id]);
   return true;
 }
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Exports - 抽象應用功能
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+/**
+ * @param {string} account username
+ * @param {string} resource URL
+ * @returns 
+ */
+export async function getResourceInfo(account, resource) {
+  const res = await pool.query(`
+    SELECT U.account, R.title , RES.resource, P."action", RES."action" AS res_action
+    FROM sbos.user_roles UR
+    LEFT JOIN sbos.users U ON UR.user_id = U.id
+    LEFT JOIN sbos.roles R ON UR.role_id = R.id
+    LEFT join sbos.permissions P on R.id = P.role_id 
+    LEFT JOIN sbos.resources RES ON P.resource_id = RES.id
+    WHERE U.account = $1 AND RES.resource = $2 AND P.deleted_at IS NULL
+  `, [ account, resource ]);
+
+  return res.rows ?? [];
+}

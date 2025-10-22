@@ -1,6 +1,6 @@
-import { createError, useCookie } from 'nuxt/app'  
+import { createError, useCookie } from 'nuxt/app';
 
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Store
@@ -25,18 +25,18 @@ export const useUserStore = defineStore('user', {
           body: { username, password }
         })
         
-        this.username = username
-        this.token    = res.token
+        this.username = username;
+        this.token    = res.token;
 
-        this.isLoggedIn = true
+        this.isLoggedIn = true;
 
         // 用 Nuxt useCookie 儲存 username與token
-        const userCookie = useCookie('user', { maxAge: 60 * 60 * 24 }) // 1 天
-        userCookie.value = { username, token: res.token }
+        const userCookie = useCookie('user', { maxAge: 60 * 60 * 24 }); // 1 天
+        userCookie.value = { username, token: res.token };
 
-        return true
+        return true;
       } catch (err) {
-        this.logout()
+        this.logout();
         
         throw createError({
           statusCode: err?.statusCode || 500,
@@ -46,22 +46,22 @@ export const useUserStore = defineStore('user', {
     },
 
     logout() {
-      this.token = ''
-      this.username = ''
-      this.isLoggedIn = false
+      this.token = '';
+      this.username = '';
+      this.isLoggedIn = false;
 
-      const userCookie = useCookie('user')
-      userCookie.value = null
+      const userCookie = useCookie('user');
+      userCookie.value = null;
     },
 
     loadFromCookie() {
-      const userCookie = useCookie('user')
+      const userCookie = useCookie('user');
       if (userCookie.value) {
-        this.username = userCookie.value.username
-        this.token    = userCookie.value.token
+        this.username = userCookie.value.username;
+        this.token    = userCookie.value.token;
 
-        this.isLoggedIn = true
-      }
+        this.isLoggedIn = true;
+      };
     },
 
     /**
@@ -70,9 +70,16 @@ export const useUserStore = defineStore('user', {
      * @param {string} action 
      * @returns 
      */
-    hasPermission(resource, action = 'view') {
-      // TODO: ...
-      return true;
+    async hasPermission(resource, action = 'view') {
+      const account = this.username;
+      // eslint-disable-next-line no-undef
+      const { data } = await useAPI(`/api/users/${account}`, {
+        query: { resource, },
+      });
+
+      const info = data.value;
+
+      return (info[0]?.resource === resource);
     }
   }
 })

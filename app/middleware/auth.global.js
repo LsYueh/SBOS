@@ -1,4 +1,4 @@
-import { defineNuxtRouteMiddleware, navigateTo, createError } from '#app';
+import { defineNuxtRouteMiddleware, navigateTo, createError, showError } from '#app';
 
 import { useUserStore } from '@/stores/user.js';
 
@@ -6,7 +6,7 @@ import { useUserStore } from '@/stores/user.js';
  * Exports Nuxt Route Middleware
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
   const user = useUserStore();
 
   user.loadFromCookie();
@@ -21,9 +21,20 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return navigateTo('/dashboard');
   }
 
+  // 不需驗證的路由白名單
+  const publicRoutes = ['/', '/dashboard']
+  if (publicRoutes.includes(to.path)) {
+    return
+  }
+
+  // 如果有前綴要排除
+  // if (to.path.startsWith('/public')) {
+  //   return
+  // }
+
   // RBAC - 檢查使用者是否可進入頁面
-  const hasPermission = user.hasPermission(to.path, 'view');
+  const hasPermission = await user.hasPermission(to.path, 'view');
   if (!hasPermission) {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
+    return showError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
 })

@@ -1,14 +1,14 @@
-import pkg from 'pg'
-import dotenv from 'dotenv'
+import pkg from 'pg';
+import dotenv from 'dotenv';
 
-const { Pool } = pkg
+const { Pool } = pkg;
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * 
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /** @type {import('pg').Pool} */
-let pool = null
+let pool = null;
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Exports
@@ -31,7 +31,7 @@ export function usePgPool(config = null) {
     if (typeof useRuntimeConfig === 'function') {
       try {
         // eslint-disable-next-line no-undef
-        config = useRuntimeConfig()
+        config = useRuntimeConfig();
       } catch (e) {
         // 如果 Nuxt context 不存在，回頭走 dotenv
       }
@@ -46,11 +46,11 @@ export function usePgPool(config = null) {
         dbUser: process.env.POSTGRES_USER     || 'sbos-db-user',
         dbPass: process.env.POSTGRES_PASSWORD || 'db-passwd',
         dbName: process.env.POSTGRES_DB       || 'postgres',
-      }
+      };
     }
 
     if (!config || !config.dbUser) {
-      throw new Error('資料庫設定未提供，請確認 Nuxt runtime 或 .env')
+      throw new Error('資料庫設定未提供，請確認 Nuxt runtime 或 .env');
     }
     
     pool = new Pool({
@@ -59,7 +59,7 @@ export function usePgPool(config = null) {
       database: config.dbName,
       password: config.dbPass,
       port    : config.dbPort,
-    })
+    });
   }
 
   return pool
@@ -70,14 +70,14 @@ export function usePgPool(config = null) {
  * Legacy
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { LowSync } from 'lowdb'
-import { JSONFileSync } from 'lowdb/node'
+import { LowSync } from 'lowdb';
+import { JSONFileSync } from 'lowdb/node';
 
-const defaultData = { MHOK: [],  MHIO: [],  MFIO: [], }
+const defaultData = { MHOK: [],  MHIO: [],  MFIO: [], };
 
-const adapter = new JSONFileSync('db.json')
-const db = new LowSync(adapter, defaultData)
+const adapter = new JSONFileSync('db.json');
+const db = new LowSync(adapter, defaultData);
 
 // db.read() // Note: 如果想要一開始就有資料就要呼叫read()
 
-export default db
+export default db;
