@@ -25,10 +25,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   // 不需驗證的路由白名單
-  // const publicRoutes = ['/', '/dashboard', '/403'];
-  // if (publicRoutes.includes(to.path)) {
-  //   return;
-  // }
+  const publicRoutes = ['/'];
+  if (publicRoutes.includes(to.path)) {
+    return;
+  }
 
   // 如果有前綴要排除
   // if (to.path.startsWith('/public')) {

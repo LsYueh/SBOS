@@ -75,7 +75,8 @@ export const useUserStore = defineStore('user', {
       // eslint-disable-next-line no-undef
       const { data } = await useAPI(`/api/users/${account}`, {
         query: { resource, },
-        key: String(Math.random()), // Disables caching by providing a unique key
+        // eslint-disable-next-line no-undef
+        key: useFetchKey(),
       });
 
       const info = data.value;

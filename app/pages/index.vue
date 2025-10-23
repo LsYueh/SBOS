@@ -10,7 +10,6 @@ import UserLogin from '~/components/UserLogin.vue';
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 definePageMeta({
-  auth: false,
   headerTitle: null
 });
 
