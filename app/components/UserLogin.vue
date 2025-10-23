@@ -75,11 +75,6 @@ const password = ref('')
 const showPassword = ref(false) // 是否顯示密碼
 const errorMsg = ref('')
 
-definePageMeta({
-  middleware: [], // 跳過驗證
-  auth: false
-})
-
 watch(errorMsg, (val) => {
   if (val) {
     setTimeout(() => {

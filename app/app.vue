@@ -1,19 +1,3 @@
-<script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import Header from '~/components/Header.vue'
-import Footer from '~/components/Footer.vue'
-
-const route = useRoute()
-
-// 動態變更主內容的class
-const mainClass = computed(() => {
-  return route.path === '/'
-    ? 'justify-content-center align-items-center'
-    : 'flex-column'
-})
-</script>
-
 <template>
   <div class="d-flex flex-column min-vh-100">
     <Header />
@@ -26,6 +10,26 @@ const mainClass = computed(() => {
     <Footer />
   </div>
 </template>
+
+<script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import Header from '~/components/Header.vue';
+import Footer from '~/components/Footer.vue';
+
+const route = useRoute();
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+// 動態變更主內容的class
+const mainClass = computed(() => {
+  return route.path === '/'
+    ? 'justify-content-center align-items-center'
+    : 'flex-column';
+});
+</script>
 
 <style>
 body {

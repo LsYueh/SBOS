@@ -9,6 +9,9 @@ import { useUserStore } from '@/stores/user.js';
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const user = useUserStore();
 
+  // 讀取頁面 meta，如果 auth: false，就不驗證
+  if (to.meta.auth === false) return;
+
   user.loadFromCookie();
 
   // 排除 login 頁面，其他頁面都要驗證
@@ -22,19 +25,19 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   // 不需驗證的路由白名單
-  const publicRoutes = ['/', '/dashboard']
-  if (publicRoutes.includes(to.path)) {
-    return
-  }
+  // const publicRoutes = ['/', '/dashboard', '/403'];
+  // if (publicRoutes.includes(to.path)) {
+  //   return;
+  // }
 
   // 如果有前綴要排除
   // if (to.path.startsWith('/public')) {
-  //   return
+  //   return;
   // }
 
   // RBAC - 檢查使用者是否可進入頁面
   const hasPermission = await user.hasPermission(to.path, 'view');
   if (!hasPermission) {
-    return showError({ statusCode: 403, statusMessage: 'Forbidden' });
+    return navigateTo('/403');
   }
 })
