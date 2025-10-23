@@ -15,48 +15,24 @@ Securities Back-Office System - 證券帳務系統
 
 # 初次使用設定
 
-初次使用登入驗證完畢後，會將第一個使用者預設為`系統管理員`，後續可自行添加使用者。  
+初次使用登入驗證完畢後，會將第一個使用者預設為`系統管理員`，後續可自行至`使用者設定 (TLB)`添加使用者或修改使用者內容。  
 
-![登入流程](./docs/system-design/01-user-login/登入流程圖.drawio.png)
+![使用者設定](./docs/res/tlb-with-users.png)
 
 <br><br>
 
-# Nuxt Minimal Starter
+# 權限與資源
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+在`RBAC`（`Role-Based Access Control`）的架構下，系統的`資源 (Resource)`即為網頁瀏覽的`URL`。系統資源至少要有`/tlb`、`/prsb`、與`/prsb/resource`這三項資源才好進行後續權限管理與設定。目前可以透過`sequelize-cli`的Seeder來對系統進行資料初始化。  
 
-## Setup
+![權限資源設定](./docs/res/resource-management.png)
 
-Make sure to install dependencies:
+<br><br>
 
-```bash
-# npm
-npm install
-```
+# 權限管理
 
-## Development Server
+`管理員`至少要有`/tlb`、`/prsb`、與`/prsb/resource`這三項資源的權限，才能進行完整的權限管理與設定。  
 
-Start the development server on `http://localhost:3000`:
+![權限管理](./docs/res/permissions-01.png)
 
-```bash
-# npm
-npm run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+<br><br>
