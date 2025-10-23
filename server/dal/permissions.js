@@ -1,4 +1,3 @@
-import BitSet from 'bitset';
 import { usePgPool } from '../utils/db.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -9,137 +8,118 @@ import { usePgPool } from '../utils/db.js';
 const pool = usePgPool();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
- * Helper
----------+---------+---------+---------+---------+---------+---------+--------*/
-
-/**
- * BitSet to Actions
- * @param {BitSet} bitSet 
- * @returns 
- */
-function btoa(bitSet) {
-  const bs = new BitSet;
-  return []
-}
-
-/**
- * Actions to BitSet
- * @param {string[]} action 
- * @returns 
- */
-function atob(action) {
-  const bs = new BitSet;
-  return bs
-}
-
-/**------+---------+---------+---------+---------+---------+---------+----------
  * Exports
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 /**
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @param {object} input 
  * @param {string} input.created_by 
  * @returns 
  */
-export async function create(input) {
+export async function create(role_id, resource_id, input) {
   const {
-    created_by, modified_by,
-    key, description, resource, action
+    created_by, modified_by, action
   } = input;
 
-  const res = await pool.query(
-    `INSERT INTO sbos.permissions (created_by, modified_by, key, description, resource, action) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-    [ created_by, modified_by, key, description, resource, action ]
-  );
+  const res = await pool.query(`
+    INSERT INTO sbos.permissions (created_by, modified_by, role_id, resource_id, action) VALUES ($1, $2, $3, $4, $5) RETURNING role_id 
+  `, [created_by, modified_by, role_id, resource_id, action]);
 
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0].role_id;
 }
 
 /**
+ * @param {string} role_id 
  * @returns 
  */
-export async function read() {
-  const res = await pool.query(`SELECT P.* FROM sbos.permissions P ORDER BY P.resource ASC`)
-  return res.rows ?? []
+export async function getRolePermissions(role_id) {
+  const res = await pool.query(`
+    SELECT P.*,
+           COALESCE(RES.resource, '(未知)') as resource
+    FROM sbos.permissions P
+    LEFT JOIN sbos.resources RES ON P.resource_id = RES.id
+    WHERE P.role_id=$1::uuid
+    ORDER BY resource asc
+  `, [role_id]);
+
+  return res.rows ?? [];
 }
 
 /**
- * @param {string} id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @param {object} input 
  * @returns 
  */
-export async function update(id, input) {
+export async function update(role_id, resource_id,  input) {
   const {
-    modified_by,
-    description, resource, action
-  } = input;
+    modified_by, action
+  } = input
 
-  const query = `
-    UPDATE sbos.permissions 
-    SET modified_by = $1, updated_at = now(), "description"=$2, resource=$3, action=$4 
-    WHERE id=$5::uuid 
-    RETURNING id
-  `;
-  const values = [ modified_by, description, resource, action, id ];
+  const res = await pool.query(`
+    UPDATE sbos.permissions
+    SET modified_by = $3, updated_at = now(), "action" = $4
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
+    RETURNING role_id
+  `, [role_id, resource_id, modified_by, action]);
 
-  const res = await pool.query(query, values);
-
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0].role_id;
 }
 
 /**
- * @param {string} id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @param {Object} input 
  * @returns 
  */
-export async function enable(id, input) {
+export async function enable(role_id, resource_id, input) {
   const { modified_by } = input;
 
   const query = `
     UPDATE sbos.permissions 
-    SET modified_by = $1, updated_at = now(), deleted_at = NULL
-    WHERE id=$2::uuid 
-    RETURNING id
+    SET modified_by = $3, updated_at = now(), deleted_at = NULL
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
+    RETURNING role_id
   `;
 
-  const res = await pool.query(query, [modified_by, id]);
-  
-  const permissions_id = res.rows[0].id;
+  const res = await pool.query(query, [role_id, resource_id, modified_by]);
 
-  return permissions_id
+  return res.rows[0].role_id;
 }
 
 /**
- * @param {string} id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @param {Object} input 
  * @returns 
  */
-export async function disable(id, input) {
+export async function disable(role_id, resource_id, input) {
   const { modified_by } = input
 
   const query = `
     UPDATE sbos.permissions 
-    SET modified_by = $1, updated_at = now(), deleted_at = now() 
-    WHERE id=$2::uuid 
-    RETURNING id
+    SET modified_by = $3, updated_at = now(), deleted_at = now() 
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
+    RETURNING role_id
   `;
 
-  const res = await pool.query(query, [modified_by, id]);
+  const res = await pool.query(query, [role_id, resource_id, modified_by]);
 
-  const permissions_id = res.rows[0].id;
-
-  return permissions_id
+  return res.rows[0].role_id;
 }
 
 /**
- * @param {string} id (UUIDv1)
+ * @param {string} role_id     (UUIDv1)
+ * @param {string} resource_id (UUIDv1)
  * @returns 
  */
-export async function del(id) {
-  await pool.query(`DELETE FROM sbos.permissions WHERE id=$1::uuid`, [id]);
+export async function del(role_id, resource_id) {
+  await pool.query(`
+    DELETE FROM sbos.permissions
+    WHERE role_id=$1::uuid AND resource_id=$2::uuid
+  `, [role_id, resource_id]);
+
   return true;
 }

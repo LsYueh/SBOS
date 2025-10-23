@@ -1,21 +1,21 @@
-import { defineEventHandler, readBody, createError } from 'h3';
+import { defineEventHandler, getRouterParam, createError } from 'h3'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { create } from '../../dal/permissions.js';
+import { del } from '../../../dal/resources.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
+  const id = getRouterParam(event, 'id');
 
-  if (!body.key || !body.resource) {
-    throw createError({ statusCode: 400, statusMessage: 'key 與 resource 必填' })
+  if (!id) {
+    throw createError({ statusCode: 400, statusMessage: '缺少 ID' })
   }
 
-  return await create(body)
+  throw createError({ statusCode: 501, statusMessage: 'Not implemented' });
 })

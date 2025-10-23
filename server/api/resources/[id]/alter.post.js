@@ -4,7 +4,7 @@ import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { enable, disable } from '../../../dal/permissions.js'
+import { enable, disable } from '../../../dal/resources.js'
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler

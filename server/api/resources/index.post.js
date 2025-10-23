@@ -1,15 +1,21 @@
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, readBody, createError } from 'h3';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { read } from '../../dal/roles.js'
+import { create } from '../../dal/resources.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-export default defineEventHandler(async () => {
-  return await read()
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event);
+
+  if (!body.key || !body.resource) {
+    throw createError({ statusCode: 400, statusMessage: 'key 與 resource 必填' })
+  }
+
+  return await create(body)
 })

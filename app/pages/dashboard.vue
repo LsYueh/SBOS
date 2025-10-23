@@ -1,8 +1,3 @@
-<script setup>
-const user = useUserStore()
-user.loadFromCookie()
-</script>
-
 <template>
   <div class="container py-5">
     <div class="card shadow-sm p-4">
@@ -33,6 +28,24 @@ user.loadFromCookie()
     </div>
   </div>
 </template>
+
+<script setup>
+const user = useUserStore();
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Page Meta
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+definePageMeta({
+  auth: false
+});
+
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * 
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
+user.loadFromCookie();
+</script>
 
 <style scoped>
 .card {

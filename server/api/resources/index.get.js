@@ -4,7 +4,7 @@ import { defineEventHandler, getQuery } from 'h3';
  * DAL
 ---------+---------+---------+---------+---------+---------+---------+--------*/
 
-import { read } from '../../dal/permissions.js';
+import { read } from '../../dal/resources.js';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Export Event Handler

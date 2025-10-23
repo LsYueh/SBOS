@@ -67,7 +67,7 @@
     <div class="input-group mb-2">
       <span class="input-group-text">資源</span>
       <div class="input-group-text p-0 flex-grow-1">
-        <Table ref="tableRef" class="w-100" :columns="tableColumns" :options="tableOptions" @ready="onTableReady" @row-click="handleRowClick"/>
+        <Table ref="tableRef" class="w-100" :columns="table.columns" :options="table.options" @ready="onTableReady" @row-click="handleRowClick"/>
       </div>
     </div>
 
@@ -89,8 +89,8 @@
 <script setup>
 import { reactive, ref, onMounted  } from 'vue';
 import Table from '~/components/Table.vue';
-const { $bootstrap, $dayjs } = useNuxtApp();
 
+const { $api, $bootstrap } = useNuxtApp();
 const user = useUserStore();
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -122,51 +122,61 @@ const formResource = reactive({
   action: '',
 });
 
+/**------+---------+---------+---------+---------+---------+---------+----------
+ * Variables : Table/View
+---------+---------+---------+---------+---------+---------+---------+--------*/
+
 const tableRef = ref(null);
-
-const tableOptions = {
-  pagination: true,
-  paginationSize: 5
-};
-
-const tableColumns = [
-  { title: 'KEY', field: 'key', widthGrow: 0.5 },
-  { title: 'URL', field: 'resource' },
-  { title: '建立時間', field: 'created_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
-  { title: '更新時間', field: 'updated_at', headerSort:false, widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
-  { title: '權限', field: 'action', hozAlign: 'right',
-    formatter: (cell) => {
-      const action = cell.getValue();
-      return action
+const table = {
+  columns: [
+    { title: 'KEY', field: 'key', hozAlign: 'left', headerSort:true, widthGrow: 0.5 },
+    { title: 'URL', field: 'resource', hozAlign: 'left', },
+    { title: '建立時間', field: 'created_at', widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '更新時間', field: 'updated_at', widthGrow: 0.5, formatter: (cell) => datetimeFormatter(cell.getValue()), },
+    { title: '權限', field: 'action', hozAlign: 'right',
+      formatter: (cell) => {
+        const action = cell.getValue();
+        return getSelectedPermissions(action, options);
+      },
     },
+    {
+      title: '狀態', field: 'deleted_at', widthGrow: 0.3,
+      formatter: (cell) => {
+        const view = cell.getData()
+        const deletedAt = view.deleted_at
+
+        const opacity = 0.5
+
+        if (deletedAt) {
+          cell.getRow().getElement().style.opacity = opacity
+        }
+
+        const textColor = deletedAt ? 'text-danger' : 'text-success';
+        
+        return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:context-menu};" />`
+      },
+      cellClick: async (e, cell) => {
+        const view = cell.getData()
+        const deletedAt = view.deleted_at
+
+        // 重新啟用的時候不警告，不然太擾民了
+        if (!deletedAt && !confirm('確定要停用這個資源嗎？')) return
+
+        await alterResource(view.id, view.deleted_at)
+      },
+    }
+  ],
+  options: {
+    columnDefaults:{
+      headerHozAlign: 'center',
+      headerSort: false,
+      hozAlign: 'center',
+      resizable: false,
+    },
+    pagination: true,
+    paginationSize: 5
   },
-  {
-    title: '狀態'    , field: 'deleted_at', headerHozAlign: 'center', hozAlign: 'center', headerSort:false, widthGrow: 0.3,
-    formatter: (cell) => {
-      const view = cell.getData()
-      const deletedAt = view.deleted_at
-
-      const opacity = 0.5
-
-      if (deletedAt) {
-        cell.getRow().getElement().style.opacity = opacity
-      }
-
-      const textColor = deletedAt ? 'text-danger' : 'text-success';
-      
-      return `<i class="fas ${deletedAt ? 'fa-ban' : 'fa-circle-check'} ${textColor}" style="cursor:context-menu};" />`
-    },
-    cellClick: async (e, cell) => {
-      const view = cell.getData()
-      const deletedAt = view.deleted_at
-
-      // 重新啟用的時候不警告，不然太擾民了
-      if (!deletedAt && !confirm('確定要停用這個資源嗎？')) return
-
-      await alterResource(view.id, view.deleted_at)
-    },
-  }
-];
+};
 
 let timer = null;
 
@@ -176,7 +186,7 @@ let timer = null;
 
 /** @type {string[]} Permission option */
 const options = PERMISSION_OPTIONS;
-const checked = ref(Array(options.length).fill(false))
+const checked = ref(Array(options.length).fill(false));
 
 /**
  * BitSet
@@ -187,7 +197,7 @@ const bitValue = computed(() => {
     if (val) acc |= (1 << idx)
     return acc
   }, 0)
-})
+});
 
 /**
  * 設定 checkbox 狀態
@@ -232,11 +242,6 @@ function initBs5Tooltips() {
 /**------+---------+---------+---------+---------+---------+---------+----------
  * Helper
 ---------+---------+---------+---------+---------+---------+---------+--------*/
-
-/** YYYY/MM/DD HH:mm */
-function datetimeFormatter(v) {
-  return v ? $dayjs(v).format('YYYY/MM/DD HH:mm') : '----/--/-- --:--:--'
-}
 
 /**
  * (Factory function)
@@ -304,7 +309,7 @@ function resetFormResource() {
  * @returns 
  */
 async function loadResources() {
-  const data = await $fetch('/api/permissions');
+  const data = await $api('/api/resources');
 
   return data
 }
@@ -325,12 +330,12 @@ async function upsertResource() {
     formResource.action = bitValue.value;
 
     if (formResource.id) {
-      const _r = await $fetch(`/api/permissions/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
+      const _r = await $api(`/api/resources/${formResource.id}`, { method: 'PUT', body: { ...formResource } });
       showToast(`URL:'${formResource.resource}' 更新成功`, 'success')
     } else {
       formResource.created_by = user.username;
 
-      const _r = await $fetch('/api/permissions', { method: 'POST', body: { ...formResource } });
+      const _r = await $api('/api/resources', { method: 'POST', body: { ...formResource } });
       showToast(`URL:'${formResource.resource}' 新增成功`, 'success')
     }
 
@@ -349,7 +354,7 @@ async function alterResource(id, deleted_at) {
   try {
     formResource.modified_by = user.username
     const statusTo = deleted_at ? 'Y' : 'N'
-    const _r = await $fetch(`/api/permissions/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formResource } })
+    const _r = await $api(`/api/resources/${id}/alter`, { method: 'POST', body: { status: statusTo, ...formResource } })
     
     reloadTable()
   } catch (err) {
