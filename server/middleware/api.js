@@ -1,4 +1,4 @@
-import { defineEventHandler, getHeader, createError } from 'h3';
+import { defineEventHandler, getHeader, readBody, getQuery, createError } from 'h3';
 import jwt from 'jsonwebtoken';
 
 /**------+---------+---------+---------+---------+---------+---------+----------
@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   // eslint-disable-next-line no-undef
   const config = useRuntimeConfig();
 
+  // JWT check
   const authHeader = getHeader(event, 'Authorization');
   if (!authHeader) {
     throw createError({ statusCode: 401, statusMessage: 'No token provided' });

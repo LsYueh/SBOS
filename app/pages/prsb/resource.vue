@@ -317,13 +317,6 @@ async function loadResources() {
 /**
  * 
  */
-async function checkResource() {
-  // TODO: ...
-}
-
-/**
- * 
- */
 async function upsertResource() {
   try {
     formResource.modified_by = user.username;

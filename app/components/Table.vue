@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch, defineEmits } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 
