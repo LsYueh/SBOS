@@ -7,15 +7,17 @@ import jwt from 'jsonwebtoken';
 
 /**
  * @param {import('h3').H3Event} event 
- * @returns 
+ * @returns {string|null}
  */
 function resolveAction(event) {
+  // Note: 先讀 X-Sbos-User-Action，如果沒有，就 fallback HTTP method
+
   const action = getHeader(event, 'X-Sbos-User-Action');
   
-  if (action) return action;
+  if (action && action.trim() !== '') {
+    return action.trim();
+  }
   
-  // 先讀 X-SBOS-User-Action，如果沒有，就 fallback HTTP method
-
   const method = event.node.req.method;
 
   switch (method) {
@@ -23,23 +25,43 @@ function resolveAction(event) {
     case 'POST'  : return 'create';
     case 'PUT'   : return 'update';
     case 'DELETE': return 'delete';
-    default: return null;
+    default      : return null; // 回傳 null → 由 checkPermission 判斷
   }
 }
 
 /**
  * 從 event 取得 resource 與 action，並檢查權限
  * @param {import('h3').H3Event} event 
- * @param {string} action 
  * @returns {Promise<boolean>}
  */
-export async function checkPermission(event, action) {
+export async function checkPermission(event) {
   const resource = getHeader(event, 'X-Sbos-Resource-Endpoint');
+  const action   = resolveAction(event);
 
-  // 排除 / 與 /dashboard
-  if (['/', '/dashboard'].includes(resource)) return true;
+  // Header: X-Sbos-Resource-Endpoint 必須存在
+  if (!resource || resource.trim() === '') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Missing required header: 'X-Sbos-Resource-Endpoint'`
+    });
+  }
 
-  console.log(action); // TODO: 權限檢查
+  // 檢查 action 是否為有效字串
+  if (!action || typeof action !== 'string' || action.trim() === '') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Action cannot be resolved ('X-Sbos-User-Action' missing and HTTP method unsupported)`
+    });
+  }
+
+  // 排除特定資源不檢查
+  const normalized = resource.trim();
+  if (['/', '/dashboard'].includes(normalized)) {
+    return true;
+  }
+
+  // TODO: 權限檢查
+  console.log(`[ACL] Checking permission: ${normalized} -> ${action}`);
 
   return true;
 }
@@ -72,12 +94,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Permission check
-  const action = resolveAction(event);
-  if (!action) {
-    throw createError({ statusCode: 400, statusMessage: 'Cannot determine action' });
-  }
+  const allowed = await checkPermission(event);
 
-  if (!await checkPermission(event, action)) {
+  if (!allowed) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
 });
