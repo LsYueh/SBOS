@@ -7,6 +7,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 
+const route = useRoute()
 const user = useUserStore();
 
 const props = defineProps({
@@ -28,12 +29,14 @@ watch(() => props.ajaxUrl, (newUrl) => {
 onMounted(() => {
   const headers = user.token ? {
     'Authorization': `Bearer ${user.token}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Sbos-Resource-Endpoint': route.path,
+    'X-Sbos-User-Action': 'read', // TODO: 要換成action可解析的文字
   } : {};
   
   tabulatorInstance = new Tabulator(table.value, {
     ajaxURL: props.ajaxUrl,
-    ajaxConfig: { headers, },
+    ajaxConfig: { headers },
     pagination: true,
     paginationMode: 'remote',
     paginationSize: 10,
